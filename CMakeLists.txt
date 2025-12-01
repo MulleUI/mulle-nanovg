@@ -26,7 +26,9 @@ list( INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include( Environment)
 
 include( Files)
-
+if( NOT APPLE)
+  list( REMOVE_ITEM SOURCES src/nanovg_mtl.m)
+endif()
 include( IDESupport OPTIONAL)
 
 

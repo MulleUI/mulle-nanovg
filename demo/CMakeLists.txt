@@ -15,6 +15,9 @@ list( INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include( Environment)
 
 include( Files)
+if( NOT APPLE)
+  list( REMOVE_ITEM SOURCES "../src/nanovg_mtl.m")
+endif()
 
 include( IDESupport OPTIONAL)
 
@@ -39,11 +42,18 @@ foreach( MAIN_SOURCE ${DEMO_MAIN_SOURCES})
    math( EXPR MAIN_SOURCE_LENGTH "${MAIN_SOURCE_LENGTH} - 11")
    string( SUBSTRING "${MAIN_SOURCE}" 9 ${MAIN_SOURCE_LENGTH} EXECUTABLE_NAME)
 
-   set( SOURCES "${MAIN_SOURCE}" ${DEMO_OTHER_SOURCES})
-   include( Executable)
-   include( InstallExecutable)
-   include( FinalOutput OPTIONAL)
-   # only for Executable
-   include( Motd OPTIONAL)
+   string( TOLOWER "${CMAKE_SYSTEM_NAME}" MULLE_UNAME)
+   if( "${EXECUTABLE_NAME}" MATCHES "^${MULLE_UNAME}")
+      set( SOURCES "${MAIN_SOURCE}" ${DEMO_OTHER_SOURCES})
+      include( Executable)
+      # Link GLES3 on Linux
+      if( UNIX AND NOT APPLE)
+         target_link_libraries( ${EXECUTABLE_NAME} GLESv2)
+      endif()
+      include( InstallExecutable)
+      include( FinalOutput OPTIONAL)
+      # only for Executable
+      include( Motd OPTIONAL)
+   endif()
 endforeach()
 

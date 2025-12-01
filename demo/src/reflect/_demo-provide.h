@@ -30,6 +30,7 @@
 #include "nanovg_mtl.h"
 #include "nanovg-trace-functions.h"
 #include "stb_image.h"
+#include "stb_image_write.h"
 #include "stb_truetype.h"
 
 

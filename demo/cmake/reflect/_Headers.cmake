@@ -66,6 +66,7 @@ set( PUBLIC_HEADERS
 ../src/d3d11_shaders/D3D11PixelShaderAA.h
 ../src/d3d11_shaders/D3D11PixelShader.h
 ../src/d3d11_shaders/D3D11VertexShader.h
+src/demo.h
 src/demo-version.h
 ../src/fontstash.h
 ../src/mnvg_bitcode/ios.h
@@ -80,6 +81,7 @@ src/demo-version.h
 ../src/nanovg_mtl.h
 ../src/nanovg-trace-functions.h
 ../src/stb_image.h
+src/stb_image_write.h
 ../src/stb_truetype.h
 )
 

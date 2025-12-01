@@ -16,3 +16,9 @@ export MULLE_SOURCETREE_GRAVEYARD_ENABLED="NO"
 export MULLE_MATCH_PATH="${MULLE_MATCH_PATH}:../src"
 
 
+#
+#
+#
+export MULLE_MATCH_FILENAMES="config*:*.h:*.inc:*.c:*.m:CMakeLists.txt:*.cmake"
+
+

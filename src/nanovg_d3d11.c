@@ -1426,6 +1426,24 @@ struct NVGcontext* nvgCreateD3D11(void* ID3D11Device_pDevice, int flags)
 	params.renderDelete = D3Dnvg__renderDelete;
 	params.userPtr = D3D;
 	params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
+	
+	// Set context type and state stack size based on flags
+	switch (flags & (NVG_PATH_ONLY | NVG_FONT_ONLY)) {
+		case 0:
+			params.contextType = NVG_FULL_CONTEXT;
+			params.cStates = 32;  // NVG_MAX_STATES
+			break;
+		case NVG_PATH_ONLY:
+			params.contextType = NVG_PATH_CONTEXT;
+			params.cStates = 1;   // NVG_MIN_STATES
+			break;
+		case NVG_FONT_ONLY:
+			params.contextType = NVG_FONT_CONTEXT;
+			params.cStates = 32;  // NVG_MAX_STATES
+			break;
+		default:
+			goto error;
+	}
 
 	D3D->flags = flags;
 

@@ -11,4 +11,279 @@ if( MULLE_TRACE_INCLUDE)
    message( STATUS "# Include \"${CMAKE_CURRENT_LIST_FILE}\"" )
 endif()
 
-# there are no libraries in the sourcetree
+#
+# Generated from sourcetree: 722DDE24-5187-4D69-93E9-7964F3A8DB14;m;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;
+# Disable with : `mulle-sourcetree mark m `
+# Disable for this platform: `mulle-sourcetree mark m no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark m no-cmake-sdk-<name>`
+#
+if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+   list( APPEND OS_SPECIFIC_LIBRARIES "m")
+else()
+   if( NOT M_LIBRARY)
+      find_library( M_LIBRARY NAMES
+         m
+      )
+      message( STATUS "M_LIBRARY is ${M_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( M_LIBRARY)
+         #
+         # Add M_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark m no-cmake-add`
+         #
+         list( APPEND OS_SPECIFIC_LIBRARIES ${M_LIBRARY})
+         # intentionally left blank
+      else()
+         # Disable with: `mulle-sourcetree mark m no-require-link`
+         message( SEND_ERROR "M_LIBRARY was not found in m")
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 6C07DED7-45E3-48F5-9B68-9BA8703E5300;GLESv2;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;
+# Disable with : `mulle-sourcetree mark GLESv2 `
+# Disable for this platform: `mulle-sourcetree mark GLESv2 no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark GLESv2 no-cmake-sdk-<name>`
+#
+if( NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+      list( APPEND OS_SPECIFIC_LIBRARIES "GLESv2")
+   else()
+      if( NOT GLE_SV2_LIBRARY)
+         find_library( GLE_SV2_LIBRARY NAMES
+            GLESv2
+         )
+         message( STATUS "GLE_SV2_LIBRARY is ${GLE_SV2_LIBRARY}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( GLE_SV2_LIBRARY)
+            #
+            # Add GLE_SV2_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark GLESv2 no-cmake-add`
+            #
+            list( APPEND OS_SPECIFIC_LIBRARIES ${GLE_SV2_LIBRARY})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark GLESv2 no-require-link`
+            message( SEND_ERROR "GLE_SV2_LIBRARY was not found in GLESv2")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 6D5EB449-7D2A-42D1-9616-581ACBBEB2E7;Metal;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
+# Disable with : `mulle-sourcetree mark Metal `
+# Disable for this platform: `mulle-sourcetree mark Metal no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark Metal no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_ALL_LOAD_OS_SPECIFIC_FRAMEWORKS_AS_NAMES)
+      list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "Metal")
+   else()
+      if( NOT METAL_FRAMEWORK)
+         find_library( METAL_FRAMEWORK NAMES
+            Metal
+         )
+         message( STATUS "METAL_FRAMEWORK is ${METAL_FRAMEWORK}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( METAL_FRAMEWORK)
+            #
+            # Add METAL_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
+            # Disable with: `mulle-sourcetree mark Metal no-cmake-add`
+            #
+            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${METAL_FRAMEWORK})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark Metal no-require-link`
+            message( SEND_ERROR "METAL_FRAMEWORK was not found in Metal")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 9428C638-91F4-4E41-9330-5CEED48FD390;QuartzCore;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
+# Disable with : `mulle-sourcetree mark QuartzCore `
+# Disable for this platform: `mulle-sourcetree mark QuartzCore no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark QuartzCore no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_ALL_LOAD_OS_SPECIFIC_FRAMEWORKS_AS_NAMES)
+      list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "QuartzCore")
+   else()
+      if( NOT QUARTZ_CORE_FRAMEWORK)
+         find_library( QUARTZ_CORE_FRAMEWORK NAMES
+            QuartzCore
+         )
+         message( STATUS "QUARTZ_CORE_FRAMEWORK is ${QUARTZ_CORE_FRAMEWORK}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( QUARTZ_CORE_FRAMEWORK)
+            #
+            # Add QUARTZ_CORE_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
+            # Disable with: `mulle-sourcetree mark QuartzCore no-cmake-add`
+            #
+            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${QUARTZ_CORE_FRAMEWORK})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark QuartzCore no-require-link`
+            message( SEND_ERROR "QUARTZ_CORE_FRAMEWORK was not found in QuartzCore")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: B819B9D5-AA8F-4F2D-B83B-42D1A7C12B84;CoreGraphics;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
+# Disable with : `mulle-sourcetree mark CoreGraphics `
+# Disable for this platform: `mulle-sourcetree mark CoreGraphics no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark CoreGraphics no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_ALL_LOAD_OS_SPECIFIC_FRAMEWORKS_AS_NAMES)
+      list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "CoreGraphics")
+   else()
+      if( NOT CORE_GRAPHICS_FRAMEWORK)
+         find_library( CORE_GRAPHICS_FRAMEWORK NAMES
+            CoreGraphics
+         )
+         message( STATUS "CORE_GRAPHICS_FRAMEWORK is ${CORE_GRAPHICS_FRAMEWORK}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( CORE_GRAPHICS_FRAMEWORK)
+            #
+            # Add CORE_GRAPHICS_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
+            # Disable with: `mulle-sourcetree mark CoreGraphics no-cmake-add`
+            #
+            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${CORE_GRAPHICS_FRAMEWORK})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark CoreGraphics no-require-link`
+            message( SEND_ERROR "CORE_GRAPHICS_FRAMEWORK was not found in CoreGraphics")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 674B59ED-9851-49CB-9435-BD7DED07971E;Foundation;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
+# Disable with : `mulle-sourcetree mark Foundation `
+# Disable for this platform: `mulle-sourcetree mark Foundation no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark Foundation no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_ALL_LOAD_OS_SPECIFIC_FRAMEWORKS_AS_NAMES)
+      list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "Foundation")
+   else()
+      if( NOT FOUNDATION_FRAMEWORK)
+         find_library( FOUNDATION_FRAMEWORK NAMES
+            Foundation
+         )
+         message( STATUS "FOUNDATION_FRAMEWORK is ${FOUNDATION_FRAMEWORK}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( FOUNDATION_FRAMEWORK)
+            #
+            # Add FOUNDATION_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
+            # Disable with: `mulle-sourcetree mark Foundation no-cmake-add`
+            #
+            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${FOUNDATION_FRAMEWORK})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark Foundation no-require-link`
+            message( SEND_ERROR "FOUNDATION_FRAMEWORK was not found in Foundation")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 954F82C7-9964-468E-A584-89796074D8BB;IOKit;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
+# Disable with : `mulle-sourcetree mark IOKit `
+# Disable for this platform: `mulle-sourcetree mark IOKit no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark IOKit no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_ALL_LOAD_OS_SPECIFIC_FRAMEWORKS_AS_NAMES)
+      list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "IOKit")
+   else()
+      if( NOT IO_KIT_FRAMEWORK)
+         find_library( IO_KIT_FRAMEWORK NAMES
+            IOKit
+         )
+         message( STATUS "IO_KIT_FRAMEWORK is ${IO_KIT_FRAMEWORK}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( IO_KIT_FRAMEWORK)
+            #
+            # Add IO_KIT_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
+            # Disable with: `mulle-sourcetree mark IOKit no-cmake-add`
+            #
+            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${IO_KIT_FRAMEWORK})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark IOKit no-require-link`
+            message( SEND_ERROR "IO_KIT_FRAMEWORK was not found in IOKit")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 34EA9A75-CB2B-422C-80A6-9A787BF2AACB;AppKit;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
+# Disable with : `mulle-sourcetree mark AppKit `
+# Disable for this platform: `mulle-sourcetree mark AppKit no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark AppKit no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_ALL_LOAD_OS_SPECIFIC_FRAMEWORKS_AS_NAMES)
+      list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "AppKit")
+   else()
+      if( NOT APP_KIT_FRAMEWORK)
+         find_library( APP_KIT_FRAMEWORK NAMES
+            AppKit
+         )
+         message( STATUS "APP_KIT_FRAMEWORK is ${APP_KIT_FRAMEWORK}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( APP_KIT_FRAMEWORK)
+            #
+            # Add APP_KIT_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
+            # Disable with: `mulle-sourcetree mark AppKit no-cmake-add`
+            #
+            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${APP_KIT_FRAMEWORK})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark AppKit no-require-link`
+            message( SEND_ERROR "APP_KIT_FRAMEWORK was not found in AppKit")
+         endif()
+      endif()
+   endif()
+endif()

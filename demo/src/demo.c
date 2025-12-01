@@ -1,20 +1,18 @@
-// Demo for mulle-nanovg
-#include <mulle-nanovg.h>
+#include "demo.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef NANOVG_GLEW
+#  include <GL/glew.h>
+#endif
+#include <GLFW/glfw3.h>
+#include "demo.h"
 
-// For now, we'll need to define which backend to use
-// On macOS, we use Metal
-#ifdef __APPLE__
-  // Metal backend will be used
-#elif defined(_WIN32)
-  // DX11 backend will be used
-#else
-  // OpenGL backend
-  #define NANOVG_GL3
-  #include <GLFW/glfw3.h>
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#elif !defined(__MINGW32__)
+#include <iconv.h>
 #endif
 
 #define ICON_SEARCH 0x1F50D
@@ -24,14 +22,10 @@
 #define ICON_LOGIN 0xE740
 #define ICON_TRASH 0xE729
 
+//static float minf(float a, float b) { return a < b ? a : b; }
+//static float maxf(float a, float b) { return a > b ? a : b; }
+//static float absf(float a) { return a >= 0.0f ? a : -a; }
 static float clampf(float a, float mn, float mx) { return a < mn ? mn : (a > mx ? mx : a); }
-
-// Demo data structure
-struct DemoData {
-	int fontNormal, fontBold, fontIcons, fontEmoji;
-	int images[12];
-};
-typedef struct DemoData DemoData;
 
 // Returns 1 if col.rgba is 0.0f,0.0f,0.0f,0.0f, 0 otherwise
 int isBlack(NVGcolor col)
@@ -815,7 +809,7 @@ int loadDemoData(NVGcontext* vg, DemoData* data)
 
 	for (i = 0; i < 12; i++) {
 		char file[128];
-		snprintf(file, 128, "../example/images/image%d.jpg", i+1);
+		snprintf(file, 128, "images/image%d.jpg", i+1);
 		data->images[i] = nvgCreateImage(vg, file, 0);
 		if (data->images[i] == 0) {
 			printf("Could not load %s.\n", file);
@@ -823,22 +817,22 @@ int loadDemoData(NVGcontext* vg, DemoData* data)
 		}
 	}
 
-	data->fontIcons = nvgCreateFont(vg, "icons", "../example/entypo.ttf");
+	data->fontIcons = nvgCreateFont(vg, "icons", "./entypo.ttf");
 	if (data->fontIcons == -1) {
 		printf("Could not add font icons.\n");
 		return -1;
 	}
-	data->fontNormal = nvgCreateFont(vg, "sans", "../example/Roboto-Regular.ttf");
+	data->fontNormal = nvgCreateFont(vg, "sans", "./Roboto-Regular.ttf");
 	if (data->fontNormal == -1) {
 		printf("Could not add font italic.\n");
 		return -1;
 	}
-	data->fontBold = nvgCreateFont(vg, "sans-bold", "../example/Roboto-Bold.ttf");
+	data->fontBold = nvgCreateFont(vg, "sans-bold", "./Roboto-Bold.ttf");
 	if (data->fontBold == -1) {
 		printf("Could not add font bold.\n");
 		return -1;
 	}
-	data->fontEmoji = nvgCreateFont(vg, "emoji", "../example/NotoEmoji-Regular.ttf");
+	data->fontEmoji = nvgCreateFont(vg, "emoji", "./NotoEmoji-Regular.ttf");
 	if (data->fontEmoji == -1) {
 		printf("Could not add font emoji.\n");
 		return -1;
@@ -1216,7 +1210,6 @@ static void flipHorizontal(unsigned char* image, int w, int h, int stride)
 	}
 }
 
-// Screenshot function disabled - OpenGL specific
 #if 0
 void saveScreenShot(int w, int h, int premult, const char* name)
 {

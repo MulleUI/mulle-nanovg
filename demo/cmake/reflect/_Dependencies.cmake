@@ -11,4 +11,93 @@ if( MULLE_TRACE_INCLUDE)
    message( STATUS "# Include \"${CMAKE_CURRENT_LIST_FILE}\"" )
 endif()
 
-# there are no applicable dependencies in the sourcetree
+#
+# Generated from sourcetree: DB6AC511-E170-4FFC-BAFF-B1E4579D68A5;glfw;no-all-load,no-import;glfw3,glfw
+# Disable with : `mulle-sourcetree mark glfw no-link`
+# Disable for this platform: `mulle-sourcetree mark glfw no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark glfw no-cmake-sdk-<name>`
+#
+if( COLLECT_DEPENDENCY_LIBRARIES_AS_NAMES)
+   list( APPEND DEPENDENCY_LIBRARIES "glfw3")
+else()
+   if( NOT GLFW_LIBRARY)
+      find_library( GLFW_LIBRARY NAMES
+         ${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+         ${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}
+         glfw3
+         ${CMAKE_STATIC_LIBRARY_PREFIX}glfw${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+         ${CMAKE_STATIC_LIBRARY_PREFIX}glfw${CMAKE_STATIC_LIBRARY_SUFFIX}
+         glfw
+         NO_CMAKE_SYSTEM_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_FIND_ROOT_PATH
+      )
+      if( NOT GLFW_LIBRARY AND NOT DEPENDENCY_IGNORE_SYSTEM_LIBARIES)
+         find_library( GLFW_LIBRARY NAMES
+            ${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}
+            glfw3
+            ${CMAKE_STATIC_LIBRARY_PREFIX}glfw${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}glfw${CMAKE_STATIC_LIBRARY_SUFFIX}
+            glfw
+         )
+      endif()
+      message( STATUS "GLFW_LIBRARY is ${GLFW_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( GLFW_LIBRARY)
+         #
+         # Add GLFW_LIBRARY to DEPENDENCY_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark glfw no-cmake-add`
+         #
+         list( APPEND DEPENDENCY_LIBRARIES ${GLFW_LIBRARY})
+         #
+         # Inherit information from dependency.
+         # Encompasses: no-cmake-searchpath,no-cmake-dependency,no-cmake-loader
+         # Disable with: `mulle-sourcetree mark glfw no-cmake-inherit`
+         #
+         # temporarily expand CMAKE_MODULE_PATH
+         get_filename_component( _TMP_GLFW_ROOT "${GLFW_LIBRARY}" DIRECTORY)
+         get_filename_component( _TMP_GLFW_ROOT "${_TMP_GLFW_ROOT}" DIRECTORY)
+         #
+         #
+         # Search for "Definitions.cmake" and "DependenciesAndLibraries.cmake" to include.
+         # Disable with: `mulle-sourcetree mark glfw no-cmake-dependency`
+         #
+         foreach( _TMP_GLFW_NAME "glfw3" "glfw")
+            set( _TMP_GLFW_DIR "${_TMP_GLFW_ROOT}/include/${_TMP_GLFW_NAME}/cmake")
+            # use explicit path to avoid "surprises"
+            if( IS_DIRECTORY "${_TMP_GLFW_DIR}")
+               list( INSERT CMAKE_MODULE_PATH 0 "${_TMP_GLFW_DIR}")
+               # we only want top level INHERIT_OBJC_LOADERS, so disable them
+               if( NOT NO_INHERIT_OBJC_LOADERS)
+                  set( NO_INHERIT_OBJC_LOADERS OFF)
+               endif()
+               list( APPEND _TMP_INHERIT_OBJC_LOADERS ${NO_INHERIT_OBJC_LOADERS})
+               set( NO_INHERIT_OBJC_LOADERS ON)
+               #
+               include( "${_TMP_GLFW_DIR}/DependenciesAndLibraries.cmake" OPTIONAL)
+               #
+               list( GET _TMP_INHERIT_OBJC_LOADERS -1 NO_INHERIT_OBJC_LOADERS)
+               list( REMOVE_AT _TMP_INHERIT_OBJC_LOADERS -1)
+               list( REMOVE_ITEM CMAKE_MODULE_PATH "${_TMP_GLFW_DIR}")
+               #
+               unset( GLFW_DEFINITIONS)
+               include( "${_TMP_GLFW_DIR}/Definitions.cmake" OPTIONAL)
+               list( APPEND INHERITED_DEFINITIONS ${GLFW_DEFINITIONS})
+               break()
+            else()
+               message( STATUS "${_TMP_GLFW_DIR} not found")
+            endif()
+         endforeach()
+      else()
+         # Disable with: `mulle-sourcetree mark glfw no-require-link`
+         message( SEND_ERROR "GLFW_LIBRARY was not found in ${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}
+glfw3
+${CMAKE_STATIC_LIBRARY_PREFIX}glfw${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+${CMAKE_STATIC_LIBRARY_PREFIX}glfw${CMAKE_STATIC_LIBRARY_SUFFIX}
+glfw")
+      endif()
+   endif()
+endif()

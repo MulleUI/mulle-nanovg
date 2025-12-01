@@ -11,10 +11,13 @@ endif()
 # contents selected with patternfile ??-source--sources
 #
 set( SOURCES
-src/main-demo.c
+src/demo.c
+src/main-linux.c
+src/main-macos.m
 ../src/mulle-nanovg.c
 ../src/nanovg.c
 ../src/nanovg_d3d11.c
 ../src/nanovg_framebuffer.c
+../src/nanovg_mtl.m
 ../src/nanovg-trace-functions.c
 )

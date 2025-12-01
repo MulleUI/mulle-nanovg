@@ -1,0 +1,9 @@
+glfw;${GLFW_NODETYPE:-tar};no-all-load,no-import;DB6AC511-E170-4FFC-BAFF-B1E4579D68A5;${GLFW_URL:-https://github.com/glfw/glfw/archive/refs/tags/${MULLE_TAG}.tar.gz};${GLFW_BRANCH};${GLFW_TAG:-3.4};;base64:aW5jbHVkZT1HTEZXL2dsZnczLmgKYWxpYXNlcz1nbGZ3MyxnbGZ3Cg==
+Metal;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;6D5EB449-7D2A-42D1-9616-581ACBBEB2E7;;;;;include=<Metal/Metal.h>
+QuartzCore;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;9428C638-91F4-4E41-9330-5CEED48FD390;;;;;include=<QuartzCore/QuartzCore.h>
+CoreGraphics;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;B819B9D5-AA8F-4F2D-B83B-42D1A7C12B84;;;;;include=<CoreGraphics/CoreGraphics.h>
+Foundation;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;674B59ED-9851-49CB-9435-BD7DED07971E;;;;;include=<Foundation/Foundation.h>
+IOKit;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;954F82C7-9964-468E-A584-89796074D8BB;;;;;include=<IOKit/IOKit.h>
+AppKit;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;34EA9A75-CB2B-422C-80A6-9A787BF2AACB;;;;;include=<AppKit/AppKit.h>
+m;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;722DDE24-5187-4D69-93E9-7964F3A8DB14;;;;;
+GLESv2;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;6C07DED7-45E3-48F5-9B68-9BA8703E5300;;;;;

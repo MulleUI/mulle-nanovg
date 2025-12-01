@@ -14,6 +14,121 @@
 #ifndef _demo_include_h__
 #define _demo_include_h__
 
-/* no headers */
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove glfw`
+// (Use DB6AC511-E170-4FFC-BAFF-B1E4579D68A5 instead of glfw, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark glfw no-header`
+//    rename              : `mulle-sde dependency|library set glfw include whatever.h`
+//    reorder             : `mulle-sde dependency move glfw <up|down>`
+//    toggle #include: `mulle-sde dependency mark glfw [no-]import`
+//    toggle public       : `mulle-sde dependency mark glfw [no-]public`
+//    toggle optional     : `mulle-sde dependency mark glfw [no-]require`
+//    remove for platform : `mulle-sde dependency mark glfw no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+#include <GLFW/glfw3.h>   // glfw
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove Metal`
+// (Use 6D5EB449-7D2A-42D1-9616-581ACBBEB2E7 instead of Metal, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark Metal no-header`
+//    rename              : `mulle-sde dependency|library set Metal include whatever.h`
+//    reorder             : `mulle-sde dependency move Metal <up|down>`
+//    toggle #include: `mulle-sde dependency mark Metal [no-]import`
+//    toggle public       : `mulle-sde dependency mark Metal [no-]public`
+//    toggle optional     : `mulle-sde dependency mark Metal [no-]require`
+//    remove for platform : `mulle-sde dependency mark Metal no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if defined( __APPLE__)
+# include <<Metal/Metal.h>>   // Metal
+#endif
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove QuartzCore`
+// (Use 9428C638-91F4-4E41-9330-5CEED48FD390 instead of QuartzCore, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark QuartzCore no-header`
+//    rename              : `mulle-sde dependency|library set QuartzCore include whatever.h`
+//    reorder             : `mulle-sde dependency move QuartzCore <up|down>`
+//    toggle #include: `mulle-sde dependency mark QuartzCore [no-]import`
+//    toggle public       : `mulle-sde dependency mark QuartzCore [no-]public`
+//    toggle optional     : `mulle-sde dependency mark QuartzCore [no-]require`
+//    remove for platform : `mulle-sde dependency mark QuartzCore no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if defined( __APPLE__)
+# include <<QuartzCore/QuartzCore.h>>   // QuartzCore
+#endif
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove CoreGraphics`
+// (Use B819B9D5-AA8F-4F2D-B83B-42D1A7C12B84 instead of CoreGraphics, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark CoreGraphics no-header`
+//    rename              : `mulle-sde dependency|library set CoreGraphics include whatever.h`
+//    reorder             : `mulle-sde dependency move CoreGraphics <up|down>`
+//    toggle #include: `mulle-sde dependency mark CoreGraphics [no-]import`
+//    toggle public       : `mulle-sde dependency mark CoreGraphics [no-]public`
+//    toggle optional     : `mulle-sde dependency mark CoreGraphics [no-]require`
+//    remove for platform : `mulle-sde dependency mark CoreGraphics no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if defined( __APPLE__)
+# include <<CoreGraphics/CoreGraphics.h>>   // CoreGraphics
+#endif
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove Foundation`
+// (Use 674B59ED-9851-49CB-9435-BD7DED07971E instead of Foundation, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark Foundation no-header`
+//    rename              : `mulle-sde dependency|library set Foundation include whatever.h`
+//    reorder             : `mulle-sde dependency move Foundation <up|down>`
+//    toggle #include: `mulle-sde dependency mark Foundation [no-]import`
+//    toggle public       : `mulle-sde dependency mark Foundation [no-]public`
+//    toggle optional     : `mulle-sde dependency mark Foundation [no-]require`
+//    remove for platform : `mulle-sde dependency mark Foundation no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if defined( __APPLE__)
+# include <<Foundation/Foundation.h>>   // Foundation
+#endif
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove IOKit`
+// (Use 954F82C7-9964-468E-A584-89796074D8BB instead of IOKit, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark IOKit no-header`
+//    rename              : `mulle-sde dependency|library set IOKit include whatever.h`
+//    reorder             : `mulle-sde dependency move IOKit <up|down>`
+//    toggle #include: `mulle-sde dependency mark IOKit [no-]import`
+//    toggle public       : `mulle-sde dependency mark IOKit [no-]public`
+//    toggle optional     : `mulle-sde dependency mark IOKit [no-]require`
+//    remove for platform : `mulle-sde dependency mark IOKit no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if defined( __APPLE__)
+# include <<IOKit/IOKit.h>>   // IOKit
+#endif
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove AppKit`
+// (Use 34EA9A75-CB2B-422C-80A6-9A787BF2AACB instead of AppKit, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark AppKit no-header`
+//    rename              : `mulle-sde dependency|library set AppKit include whatever.h`
+//    reorder             : `mulle-sde dependency move AppKit <up|down>`
+//    toggle #include: `mulle-sde dependency mark AppKit [no-]import`
+//    toggle public       : `mulle-sde dependency mark AppKit [no-]public`
+//    toggle optional     : `mulle-sde dependency mark AppKit [no-]require`
+//    remove for platform : `mulle-sde dependency mark AppKit no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if defined( __APPLE__)
+# include <<AppKit/AppKit.h>>   // AppKit
+#endif
 
 #endif
