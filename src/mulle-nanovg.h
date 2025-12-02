@@ -29,8 +29,14 @@ extern "C" {
   #include "nanovg_d3d11.h"
 #endif
 
+// Vulkan backend
+#ifdef NANOVG_VULKAN
+  #include "nanovg_vk.h"
+  #include "nanovg_vk_utils.h"
+#endif
+
 // Unified framebuffer API
-typedef int NVGframebuffer;
+typedef void* NVGframebuffer;
 
 NVGframebuffer nvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags);
 void nvgBindFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb);

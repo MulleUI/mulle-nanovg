@@ -214,6 +214,8 @@ typedef struct VKNVGcontext {
   VkQueue queue;
 
   VkNvgExt ext;
+  
+  int currentFramebuffer;
 } VKNVGcontext;
 
 static void vknvg_setDynamicState(VKNVGcontext *vk, VkCommandBuffer cmd, const VKNVGCreatePipelineKey *pipelineKey);

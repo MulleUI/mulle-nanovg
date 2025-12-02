@@ -27,6 +27,8 @@
 #include "nanovg.h"
 #include "nanovg_mtl.h"
 #include "nanovg-trace-functions.h"
+#include "nanovg_vk.h"
+#include "nanovg_vk_utils.h"
 #include "stb_image.h"
 #include "stb_truetype.h"
 

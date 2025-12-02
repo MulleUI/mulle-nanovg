@@ -37,6 +37,8 @@ src/generic/include-private.h
 #
 set( PROJECT_ONLY_HEADERS
 src/nanovg-trace-support.inc
+src/shader/fill.frag.inc
+src/shader/fill.vert.inc
 )
 
 #
@@ -73,6 +75,8 @@ src/nanovg_gl_utils.h
 src/nanovg.h
 src/nanovg_mtl.h
 src/nanovg-trace-functions.h
+src/nanovg_vk.h
+src/nanovg_vk_utils.h
 src/stb_image.h
 src/stb_truetype.h
 )

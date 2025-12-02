@@ -492,7 +492,8 @@ nvgDeleteFramebuffer(vg, fb);
 - Trace function verification
 
 **Optional Enhancements**:
-- Vulkan backend integration (~500 lines needed for framebuffer/ReadPixels)
+- ✅ Vulkan backend integration - Complete with framebuffer support!
+- ⏳ Vulkan ReadPixels implementation (~200 lines for pixel readback)
 - Additional utility functions from nanovg_compat
 - Performance benchmarking across backends
 - Example programs for each platform
@@ -503,7 +504,7 @@ nvgDeleteFramebuffer(vg, fb);
 2. **DX11 Framebuffer Gap**: Base nanovg_dx11 lacked framebuffer support; implementation only existed in nanovg_compat wrapper
 3. **Trace Function Compatibility**: Custom nanovg fork's trace functions are backend-agnostic and work automatically
 4. **State Stack Bug**: Critical initialization bug in Metal/DX11 backends would cause immediate crashes without proper cStates setup
-5. **Vulkan Readiness**: Complete vulkan backend exists but needs framebuffer/ReadPixels implementation for full parity
+5. **Vulkan Framebuffer Pattern**: Followed OpenGL's _utils.h pattern for clean separation of framebuffer utilities from core backend
 
 ### 📁 Project Structure
 
@@ -521,6 +522,7 @@ mulle-nanovg/
 │   ├── nanovg_d3d11.h/c            # DX11 backend (refactored)
 │   ├── d3d11_shaders/              # Compiled DX11 shaders
 │   ├── nanovg_vk.h                 # Vulkan backend (header-only)
+│   ├── nanovg_vk_utils.h           # Vulkan framebuffer utilities
 │   ├── shader/                     # Vulkan SPIR-V shaders (.inc)
 │   ├── nanovg_framebuffer.c        # Unified framebuffer API
 │   └── mulle-nanovg.h              # Unified convenience header
@@ -545,8 +547,9 @@ mulle-nanovg/
 - ✅ **Linux build verified** - GLES3 backend working
 - ✅ **Linux demo running** - Full NanoVG demo with GLES3 rendering
 - ✅ **Vulkan backend integrated** - Core rendering working, demo running!
+- ✅ **Vulkan framebuffer implemented** - Create/bind framebuffer working (nanovg_vk_utils.h)
 - ⏳ Windows build verification (DX11 backend)
-- ⏳ Vulkan framebuffer implementation (~500 lines)
+- ⏳ Vulkan ReadPixels implementation (~200 lines)
 - ⏳ Complete documentation and examples
 
 ### 🐧 Linux Demo Success (2025-12-01)
@@ -601,9 +604,8 @@ mulle-nanovg/
 - ✅ Vulkan library linked via mulle-sde
 - ✅ **Critical bug fixed**: Added missing `renderValidatePaintTexture` function
 - ✅ **Critical bug fixed**: Used `fb.current_frame` instead of `fb.current_buffer` for command buffer indexing
-- ❌ **Missing**: `vknvgCreateFramebuffer()` (~200 lines) - for render-to-texture
-- ❌ **Missing**: `vknvgBindFramebuffer()` (~100 lines) - for render-to-texture
-- ❌ **Missing**: `vknvgReadPixels()` (~200 lines) - for pixel readback
+- ✅ **Framebuffer support**: `vknvgCreateFramebuffer()` and `vknvgBindFramebuffer()` implemented in nanovg_vk_utils.h
+- ⏳ **Missing**: `vknvgReadPixels()` (~200 lines) - for pixel readback
 
 **Result**:
 - Vulkan demo runs successfully on Linux
@@ -616,4 +618,4 @@ cd demo
 ./kitchen/Debug/linux-vulkan
 ```
 
-**Note**: Framebuffer functions are only needed for advanced use cases (render-to-texture). Basic rendering works perfectly without them.
+**Note**: Basic framebuffer support (create/bind) is now complete. ReadPixels is only needed for advanced use cases (pixel readback from GPU). Render-to-texture works perfectly.
