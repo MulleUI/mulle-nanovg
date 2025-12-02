@@ -12,8 +12,10 @@ endif()
 #
 set( SOURCES
 src/demo.c
-src/main-linux.c
+src/main-linux-gles.c
+src/main-linux-vulkan.c
 src/main-macos.m
+src/main-vulkan.c
 src/main-windows.c
 ../src/mulle-nanovg.c
 ../src/nanovg.c

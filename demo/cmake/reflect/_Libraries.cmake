@@ -80,6 +80,41 @@ endif()
 
 
 #
+# Generated from sourcetree: 7D71E400-2706-4A14-A17D-6749EC3F77B8;vulkan;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;
+# Disable with : `mulle-sourcetree mark vulkan `
+# Disable for this platform: `mulle-sourcetree mark vulkan no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark vulkan no-cmake-sdk-<name>`
+#
+if( NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+   if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+      list( APPEND OS_SPECIFIC_LIBRARIES "vulkan")
+   else()
+      if( NOT VULKAN_LIBRARY)
+         find_library( VULKAN_LIBRARY NAMES
+            vulkan
+         )
+         message( STATUS "VULKAN_LIBRARY is ${VULKAN_LIBRARY}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( VULKAN_LIBRARY)
+            #
+            # Add VULKAN_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark vulkan no-cmake-add`
+            #
+            list( APPEND OS_SPECIFIC_LIBRARIES ${VULKAN_LIBRARY})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark vulkan no-require-link`
+            message( SEND_ERROR "VULKAN_LIBRARY was not found in vulkan")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
 # Generated from sourcetree: 6D5EB449-7D2A-42D1-9616-581ACBBEB2E7;Metal;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
 # Disable with : `mulle-sourcetree mark Metal `
 # Disable for this platform: `mulle-sourcetree mark Metal no-cmake-platform-${MULLE_UNAME}`

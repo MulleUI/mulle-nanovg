@@ -7,3 +7,4 @@ IOKit;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-
 AppKit;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;34EA9A75-CB2B-422C-80A6-9A787BF2AACB;;;;;include=<AppKit/AppKit.h>
 m;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;722DDE24-5187-4D69-93E9-7964F3A8DB14;;;;;
 GLESv2;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;6C07DED7-45E3-48F5-9B68-9BA8703E5300;;;;;
+vulkan;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;7D71E400-2706-4A14-A17D-6749EC3F77B8;;;;;

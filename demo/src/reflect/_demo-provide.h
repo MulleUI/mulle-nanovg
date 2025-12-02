@@ -29,9 +29,11 @@
 #include "nanovg.h"
 #include "nanovg_mtl.h"
 #include "nanovg-trace-functions.h"
+#include "nanovg_vk.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include "stb_truetype.h"
+#include "vulkan_util.h"
 
 
 #endif

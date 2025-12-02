@@ -40,6 +40,8 @@ src/generic/include-private.h
 #
 set( PROJECT_ONLY_HEADERS
 ../src/nanovg-trace-support.inc
+../src/shader/fill.frag.inc
+../src/shader/fill.vert.inc
 )
 
 #
@@ -80,8 +82,10 @@ src/demo-version.h
 ../src/nanovg.h
 ../src/nanovg_mtl.h
 ../src/nanovg-trace-functions.h
+../src/nanovg_vk.h
 ../src/stb_image.h
 src/stb_image_write.h
 ../src/stb_truetype.h
+src/vulkan_util.h
 )
 

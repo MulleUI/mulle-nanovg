@@ -43,6 +43,22 @@ mulle-sde howto show --keyword styleguide --keyword "${value}"
 ```
 
 This gets the style information for the project. It is NOT optional.
+
+## MANDATORY DEBUGGING WORKFLOW
+
+🚨 **WHEN CODE CRASHES - READ THE HOWTO FIRST** 🚨
+
+```bash
+mulle-sde howto show debugging-crashes
+```
+
+**Quick reference**:
+1. GET STACKTRACE: `gdb -batch -ex "run" -ex "bt" ./executable 2>&1 | tail -30`
+2. ANALYZE: Look at crash location, function, line number
+3. FIX: Add targeted error checks based on stacktrace
+
+**DO NOT** guess or add random fixes. **ALWAYS** get the stacktrace first.
+
 ## Executable
 
 This project produces an executable product.
