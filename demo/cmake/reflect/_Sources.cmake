@@ -14,6 +14,7 @@ set( SOURCES
 src/demo.c
 src/main-linux.c
 src/main-macos.m
+src/main-windows.c
 ../src/mulle-nanovg.c
 ../src/nanovg.c
 ../src/nanovg_d3d11.c
