@@ -579,6 +579,98 @@ mulle-nanovg/
 - GLES3 works without needing GLEW/GLAD extension loaders
 - Demo code organization (common + platform-specific) makes multi-platform support clean
 
+### ✅ Unified Framebuffer Type - NVGframebuffer (2025-12-02)
+
+**Achievement**: All backend framebuffer functions now use the unified `NVGframebuffer` type instead of backend-specific types.
+
+**Changes Made**:
+- Defined `typedef void* NVGframebuffer` as the opaque framebuffer handle type
+- Updated all backend functions to return/accept `NVGframebuffer`:
+  - **OpenGL**: `nvgluCreateFramebuffer()` returns `NVGframebuffer` (was `NVGLUframebuffer*`)
+  - **Metal**: `mnvgCreateFramebuffer()` returns `NVGframebuffer` (was `int`)
+  - **DX11**: `d3dnvgCreateFramebuffer()` returns `NVGframebuffer` (was `int`)
+  - **Vulkan**: `vknvgCreateFramebuffer()` returns `NVGframebuffer` (was `int`)
+- All bind/delete functions similarly updated
+
+**Implementation Details**:
+- **OpenGL**: `NVGframebuffer` is actually `NVGLUframebuffer*` - direct pointer cast
+- **Metal/DX11/Vulkan**: `NVGframebuffer` is `int` cast to `void*` via `intptr_t`
+- All casting happens inside backend implementations - hidden from users
+- Unified wrapper functions (`nvgCreateFramebuffer()`, etc.) just call backend functions directly
+
+**Benefits**:
+- Users never see backend-specific types in the API
+- Clean, opaque handle type across all backends
+- No casting needed in user code
+- Backend-specific details completely hidden
+
+**Helper Function**:
+- `nvgFramebufferImage(fb)` - extracts image handle for use with `nvgImagePattern()`
+  - GL: accesses `((NVGLUframebuffer*)fb)->image`
+  - Others: casts `void*` back to `int`
+
+**Location**: 
+- Type definition: `src/mulle-nanovg-utils.h`
+- Backend implementations: `src/nanovg_gl_utils.h`, `src/nanovg_mtl.m`, `src/nanovg_d3d11.c`, `src/nanovg_vk_utils.h`
+
+### ⚠️ Unified Framebuffer API - Compilation Challenge (2025-12-02)
+
+**Problem Discovered**: The unified framebuffer API in `mulle-nanovg-utils.h` creates a compilation conflict when trying to support multiple backends in a single executable.
+
+**Root Cause**:
+- The implementation uses `#ifdef NANOVG_GLES3` / `#ifdef NANOVG_VULKAN` to select backend
+- Each backend needs different includes (`nanovg_gl_utils.h` vs `nanovg_vk_utils.h`)
+- When compiling a file that includes the implementation, only ONE backend can be active
+- Demo project compiles same source files for both `linux-gles` and `linux-vulkan` targets
+- Result: `demo-linux-gl-fbo.c` compiles GLES3 code for both targets, Vulkan target gets wrong implementation
+
+**Current Workaround**: 
+- Framebuffer demos must be backend-specific (separate files per backend)
+- Cannot have single executable supporting multiple backends with unified framebuffer API
+
+**Pros of Current Approach** (backend-specific):
+- Simple, clean separation
+- No runtime overhead
+- Each backend optimized independently
+- Clear which backend is being used
+
+**Cons of Current Approach**:
+- Cannot switch backends at runtime
+- Larger distribution (multiple executables)
+- More test surface area
+- User must choose backend at compile time
+
+**Alternative Solutions to Consider**:
+
+1. **Runtime Backend Selection** (complex):
+   - Compile all backends into one library
+   - Unified API dispatches to correct backend at runtime
+   - Store backend type in NVGcontext
+   - Pros: Single executable, runtime flexibility
+   - Cons: Runtime overhead, larger binary, complex implementation
+
+2. **Separate Implementation Files** (moderate):
+   - `nanovg_framebuffer_gl.c`, `nanovg_framebuffer_vk.c`, etc.
+   - Build system compiles appropriate file per target
+   - Pros: Clean separation, no header ordering issues
+   - Cons: Still can't mix backends in one executable
+
+3. **Function Pointers in Context** (moderate):
+   - Store framebuffer function pointers in NVGcontext during creation
+   - Unified API calls through function pointers
+   - Pros: Runtime flexibility, clean API
+   - Cons: Slight overhead, more complex initialization
+
+4. **Keep Backend-Specific APIs** (simplest):
+   - Document that users should use `nvgluCreateFramebuffer()`, `mnvgCreateFramebuffer()`, etc.
+   - No unified wrapper
+   - Pros: No complexity, users have full control
+   - Cons: Less convenient, backend-specific code
+
+**Decision Needed**: Choose between convenience (unified API) vs flexibility (multiple backends in one binary).
+
+**Current Status**: Unified API exists but only works for single-backend executables. Need to decide if this limitation is acceptable or if we need runtime backend selection.
+
 ### 🌋 Vulkan Backend Integration (2025-12-02)
 
 **Achievement**: Integrated Vulkan backend with complete demo implementation!

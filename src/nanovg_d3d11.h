@@ -35,8 +35,8 @@ struct NVGcontext* nvgCreateD3D11(void* ID3D11Device_pDevice, int edgeaa);
 void nvgDeleteD3D11(struct NVGcontext* ctx);
 
 // Framebuffer support
-int d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags);
-void d3dnvgBindFramebuffer(struct NVGcontext* ctx, int texId);
+NVGframebuffer d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags);
+void d3dnvgBindFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb);
 
 // Optional utilities
 void d3dnvgCopyImage(struct NVGcontext* ctx, int imgDest, int imgSrc);

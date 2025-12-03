@@ -18,6 +18,25 @@
 #ifndef NANOVG_GL_UTILS_H
 #define NANOVG_GL_UTILS_H
 
+#include "nanovg-framebuffer.h"
+
+// Forward declare struct (defined after header guard)
+struct NVGLUframebuffer;
+typedef struct NVGLUframebuffer NVGLUframebuffer;
+
+// Helper function to create GL frame buffer to render to.
+void nvgluBindReadFramebuffer(NVGframebuffer fb);
+void nvgluBindDrawFramebuffer(NVGframebuffer fb);
+
+void nvgluBindFramebuffer(NVGframebuffer fb);
+NVGframebuffer nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
+void nvgluDeleteFramebuffer(NVGframebuffer fb);
+
+#endif // NANOVG_GL_UTILS_H
+
+// Struct definition needs to be visible to implementation
+#ifndef NVGLUFRAMEBUFFER_STRUCT_DEFINED
+#define NVGLUFRAMEBUFFER_STRUCT_DEFINED
 struct NVGLUframebuffer {
 	NVGcontext* ctx;
 	GLuint fbo;
@@ -26,18 +45,12 @@ struct NVGLUframebuffer {
 	int image;
 };
 typedef struct NVGLUframebuffer NVGLUframebuffer;
-
-// Helper function to create GL frame buffer to render to.
-void nvgluBindReadFramebuffer(NVGLUframebuffer* fb);
-void nvgluBindDrawFramebuffer(NVGLUframebuffer* fb);
-
-void nvgluBindFramebuffer(NVGLUframebuffer* fb);
-NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
-void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
-
-#endif // NANOVG_GL_UTILS_H
+#endif
 
 #ifdef NANOVG_GL_IMPLEMENTATION
+
+#include <stdlib.h>
+#include <string.h>
 
 #if defined(NANOVG_GL3) || defined(NANOVG_GLES2) || defined(NANOVG_GLES3)
 // FBO is core in OpenGL 3>.
@@ -65,7 +78,7 @@ static GLint defaultFBO = -1;
 
 // https://learnopengl.com/Advanced-OpenGL/Anti-Aliasing
 
-NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags)
+NVGframebuffer nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags)
 {
 #ifdef NANOVG_FBO_VALID
 	GLint defaultFBO;
@@ -147,69 +160,73 @@ NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imag
 	glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
 	if( ! (imageFlags & NVG_IMAGE_RBO_LESS))
 		glBindRenderbuffer(GL_RENDERBUFFER, defaultRBO);
-	return fb;
+	return( (NVGframebuffer) fb);
 error:
 	glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
 	if( ! (imageFlags & NVG_IMAGE_RBO_LESS))
 		glBindRenderbuffer(GL_RENDERBUFFER, defaultRBO);
-	nvgluDeleteFramebuffer(fb);
-	return NULL;
+	nvgluDeleteFramebuffer( (NVGframebuffer) fb);
+	return( NULL);
 #else
 	NVG_NOTUSED(ctx);
 	NVG_NOTUSED(w);
 	NVG_NOTUSED(h);
 	NVG_NOTUSED(imageFlags);
-	return NULL;
+	return( NULL);
 #endif
 }
 
-void nvgluBindFramebuffer(NVGLUframebuffer* fb)
+void nvgluBindFramebuffer(NVGframebuffer fb)
 {
 #ifdef NANOVG_FBO_VALID
+	NVGLUframebuffer* glfb = (NVGLUframebuffer*)fb;
 	if (defaultFBO == -1) glGetIntegerv(GL_FRAMEBUFFER_BINDING, &defaultFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, fb != NULL ? fb->fbo : defaultFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, glfb != NULL ? glfb->fbo : defaultFBO);
 #else
 	NVG_NOTUSED(fb);
 #endif
 }
 
-void nvgluBindReadFramebuffer(NVGLUframebuffer* fb)
+void nvgluBindReadFramebuffer(NVGframebuffer fb)
 {
 #if (defined( NANOVG_GL3) || defined( NANOVG_GLES3)) && defined( NANOVG_FBO_VALID)
+	NVGLUframebuffer* glfb = (NVGLUframebuffer*)fb;
 	if (defaultFBO == -1) glGetIntegerv(GL_FRAMEBUFFER_BINDING, &defaultFBO);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb != NULL ? fb->fbo : defaultFBO);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, glfb != NULL ? glfb->fbo : defaultFBO);
 #else
 	NVG_NOTUSED(fb);
 #endif
 }
 
-void nvgluBindDrawFramebuffer(NVGLUframebuffer* fb)
+void nvgluBindDrawFramebuffer(NVGframebuffer fb)
 {
 #if (defined( NANOVG_GL3) || defined( NANOVG_GLES3)) && defined( NANOVG_FBO_VALID)
+	NVGLUframebuffer* glfb = (NVGLUframebuffer*)fb;
 	if (defaultFBO == -1) glGetIntegerv(GL_FRAMEBUFFER_BINDING, &defaultFBO);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb != NULL ? fb->fbo : defaultFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, glfb != NULL ? glfb->fbo : defaultFBO);
 #else
 	NVG_NOTUSED(fb);
 #endif
 }
 
 
-void nvgluDeleteFramebuffer(NVGLUframebuffer* fb)
+void nvgluDeleteFramebuffer(NVGframebuffer fb)
 {
 #ifdef NANOVG_FBO_VALID
-	if (fb == NULL) return;
-	if (fb->fbo != 0)
-		glDeleteFramebuffers(1, &fb->fbo);
-	if (fb->rbo != 0)
-		glDeleteRenderbuffers(1, &fb->rbo);
-	if (fb->image >= 0)
-		nvgDeleteImage(fb->ctx, fb->image);
-	fb->ctx = NULL;
-	fb->fbo = 0;
-	fb->rbo = 0;
-	fb->texture = 0;
-	fb->image = -1;
-	free(fb);
+	NVGLUframebuffer* glfb = (NVGLUframebuffer*)fb;
+	if (glfb == NULL) return;
+	if (glfb->fbo != 0)
+		glDeleteFramebuffers(1, &glfb->fbo);
+	if (glfb->rbo != 0)
+		glDeleteRenderbuffers(1, &glfb->rbo);
+	if (glfb->image >= 0)
+		nvgDeleteImage(glfb->ctx, glfb->image);
+	glfb->ctx = NULL;
+	glfb->fbo = 0;
+	glfb->rbo = 0;
+	glfb->texture = 0;
+	glfb->image = -1;
+	free(glfb);
 #else
 	NVG_NOTUSED(fb);
 #endif

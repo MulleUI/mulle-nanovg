@@ -14,7 +14,6 @@ set( SOURCES
 src/mulle-nanovg.c
 src/nanovg.c
 src/nanovg_d3d11.c
-src/nanovg_framebuffer.c
 src/nanovg_mtl.m
 src/nanovg-trace-functions.c
 )

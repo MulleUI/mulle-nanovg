@@ -29,6 +29,7 @@ extern "C" {
 #endif
 
 #include "nanovg.h"
+#include "nanovg-framebuffer.h"
 
 // Create flags
 enum NVGcreateFlags {
@@ -39,12 +40,15 @@ enum NVGcreateFlags {
   // The rendering will be a little slower, but path overlaps
   // (i.e. self-intersecting or sharp turns) will be drawn just once.
   NVG_STENCIL_STROKES = 1 << 1,
+  // Flag indicating that additional debug checks are done.
+  NVG_DEBUG = 1 << 2,
   // Flag indicating if double buffering scheme is used.
   NVG_DOUBLE_BUFFER = 1 << 12,
   // Flag indicating if triple buffering scheme is used.
   NVG_TRIPLE_BUFFER = 1 << 13,
-  // Flag indicating that additional debug checks are done.
-  NVG_DEBUG = 1 << 2,
+  // Context type flags
+  NVG_PATH_ONLY = 1 << 14,
+  NVG_FONT_ONLY = 1 << 15,
 };
 
 // These are additional flags on top of NVGimageFlags.
@@ -74,8 +78,8 @@ void nvgDeleteMTL(NVGcontext* ctx);
 //
 
 // Binds the specified framebuffer as the current render pass.
-void mnvgBindFramebuffer(NVGcontext* ctx, int img);
-int mnvgCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
+void mnvgBindFramebuffer(NVGcontext* ctx, NVGframebuffer fb);
+NVGframebuffer mnvgCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
 
 //
 // Metal bridging functions

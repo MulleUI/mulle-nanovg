@@ -1226,3 +1226,6 @@ void saveScreenShot(int w, int h, int premult, const char* name)
  	free(image);
 }
 #endif
+
+
+// Framebuffer test - renders animated pattern to FBO

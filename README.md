@@ -14,7 +14,7 @@ Into a single library that can be built on all supported platforms without exter
 
 ## Status
 
-🚧 **Work in Progress** - Currently in planning phase
+🚧 **Work in Progress** 
 
 See [MATCHPLAN.md](MATCHPLAN.md) for detailed merge strategy.
 
@@ -23,6 +23,16 @@ See [MATCHPLAN.md](MATCHPLAN.md) for detailed merge strategy.
 - **macOS/iOS**: Metal backend
 - **Windows**: DirectX 11 backend
 - **Linux**: TBD (OpenGL ES or Vulkan in future)
+
+> ### Why is there no abstract API for framebuffers ?
+> 
+> Currently it seems nice to be able to support both vulkan and opengl on the
+> same platform. The drawing code is the same, but the framebuffer code 
+> diverges. So the selection which code to use should be an API user problem
+> at a higher level. (Future direction: update the NVGcontext)
+> This also simplifies linking. We require both system libraries
+> during development and we can probably in the future just #ifdef out the
+> backend we dont want to link against during recompilation)
 
 ## Building
 

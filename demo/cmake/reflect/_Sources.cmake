@@ -12,7 +12,10 @@ endif()
 #
 set( SOURCES
 src/demo.c
+src/main-darwin-gl-fbo.c
+src/main-darwin-mtl-fbo.m
 src/main-linux-gles.c
+src/main-linux-gl-fbo.c
 src/main-linux-vulkan.c
 src/main-macos.m
 src/main-vulkan.c
@@ -20,7 +23,6 @@ src/main-windows.c
 ../src/mulle-nanovg.c
 ../src/nanovg.c
 ../src/nanovg_d3d11.c
-../src/nanovg_framebuffer.c
 ../src/nanovg_mtl.m
 ../src/nanovg-trace-functions.c
 )

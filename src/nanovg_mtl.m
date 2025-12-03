@@ -430,6 +430,10 @@ static int mtlnvg__renderUpdateTexture(void* uptr, int image, int x, int y,
                                       data:data];
 }
 
+static int mtlnvg__renderValidatePaintTexture(void* uptr, int image) {
+  return 1;  // Always valid for Metal
+}
+
 static void mtlnvg__renderViewport(void* uptr, float width, float height,
                                    float devicePixelRatio) {
   MNVGcontext* mtl = (__bridge MNVGcontext*)uptr;
@@ -460,6 +464,7 @@ NVGcontext* nvgCreateMTL(void* metalLayer, int flags) {
   params.renderDeleteTexture = mtlnvg__renderDeleteTexture;
   params.renderUpdateTexture = mtlnvg__renderUpdateTexture;
   params.renderGetTextureSize = mtlnvg__renderGetTextureSize;
+  params.renderValidatePaintTexture = mtlnvg__renderValidatePaintTexture;
   params.renderViewport = mtlnvg__renderViewport;
   params.renderCancel = mtlnvg__renderCancel;
   params.renderFlush = mtlnvg__renderFlush;
@@ -518,15 +523,16 @@ void nvgDeleteMTL(NVGcontext* ctx) {
   nvgDeleteInternal(ctx);
 }
 
-void mnvgBindFramebuffer(NVGcontext* ctx, int img) {
+void mnvgBindFramebuffer(NVGcontext* ctx, NVGframebuffer fb) {
   MNVGcontext* mtl = (__bridge MNVGcontext*)nvgInternalParams(ctx)->userPtr;
-  mtl.currentFramebuffer = img;
+  mtl.currentFramebuffer = (int) (intptr_t) fb;
 }
 
-int mnvgCreateFramebuffer(NVGcontext* ctx, int width,
+NVGframebuffer mnvgCreateFramebuffer(NVGcontext* ctx, int width,
                                        int height, int imageFlags) {
-  return nvgCreateImageRGBA(ctx, width, height,
+  int image = nvgCreateImageRGBA(ctx, width, height,
                             imageFlags | NVG_IMAGE_PREMULTIPLIED, NULL);
+  return (NVGframebuffer) (intptr_t) image;
 }
 
 void mnvgClearWithColor(NVGcontext* ctx, NVGcolor color) {

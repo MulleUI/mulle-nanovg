@@ -21,6 +21,7 @@
 #include "macos.h"
 #include "simulator.h"
 #include "tvos.h"
+#include "mulle-nanovg-utils.h"
 #include "nanovg_d3d11.h"
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"

@@ -69,6 +69,7 @@ src/mnvg_bitcode/macos.h
 src/mnvg_bitcode/simulator.h
 src/mnvg_bitcode/tvos.h
 src/mulle-nanovg.h
+src/mulle-nanovg-utils.h
 src/nanovg_d3d11.h
 src/nanovg_gl.h
 src/nanovg_gl_utils.h
