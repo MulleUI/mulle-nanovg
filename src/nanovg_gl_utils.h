@@ -31,6 +31,7 @@ void nvgluBindDrawFramebuffer(NVGframebuffer fb);
 void nvgluBindFramebuffer(NVGframebuffer fb);
 NVGframebuffer nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
 void nvgluDeleteFramebuffer(NVGframebuffer fb);
+void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color);
 
 #endif // NANOVG_GL_UTILS_H
 
@@ -229,6 +230,21 @@ void nvgluDeleteFramebuffer(NVGframebuffer fb)
 	free(glfb);
 #else
 	NVG_NOTUSED(fb);
+#endif
+}
+
+void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color)
+{
+#ifdef NANOVG_FBO_VALID
+	// Clear both color and stencil buffers
+	// This is consistent across all backends (GL, Metal, D3D11)
+	// Depth is not cleared as it's not used in 2D rendering
+	float alpha = color.a;
+	glClearColor(color.r * alpha, color.g * alpha, color.b * alpha, color.a);
+	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#else
+	NVG_NOTUSED(ctx);
+	NVG_NOTUSED(color);
 #endif
 }
 

@@ -40,6 +40,7 @@ typedef struct VKNVGCreateInfo {
 extern "C" {
 #endif
 static void nvgDeleteVk(NVGcontext *ctx);
+int vknvgCreateImageFromHandle(NVGcontext* ctx, VkImageView imageView, int w, int h, int imageFlags);
 
 #ifdef __cplusplus
 }
@@ -73,6 +74,7 @@ typedef struct VKNVGtexture {
   VkImage image;
   VkImageLayout imageLayout;
   VkImageView view;
+  VkFramebuffer framebuffer;  // For render targets
 
   VkDeviceMemory mem;
   void *mappedMem;
@@ -216,6 +218,10 @@ typedef struct VKNVGcontext {
   VkNvgExt ext;
   
   int currentFramebuffer;
+  
+  // Clear color support (for vknvgClearWithColor)
+  NVGcolor clearColor;
+  int pendingClear;
 } VKNVGcontext;
 
 static void vknvg_setDynamicState(VKNVGcontext *vk, VkCommandBuffer cmd, const VKNVGCreatePipelineKey *pipelineKey);
@@ -916,6 +922,10 @@ static VkPipeline vknvg_bindPipeline(VKNVGcontext *vk, VkCommandBuffer cmdBuffer
 }
 
 static int vknvg_UpdateTexture(VkDevice device, VKNVGtexture *tex, int dx, int dy, int w, int h, const unsigned char *data) {
+  // Render target images use optimal tiling and cannot be mapped
+  if (tex->flags & NVG_IMAGE_RENDER_TARGET)
+    return 0;
+    
   if (!tex->mapped) {
     VkMemoryRequirements mem_reqs;
     vkGetImageMemoryRequirements(device, tex->image, &mem_reqs);
@@ -1374,9 +1384,11 @@ static int vknvg_renderCreateTexture(void *uptr, int type, int w, int h, int ima
   image_createInfo.mipLevels = 1;
   image_createInfo.arrayLayers = 1;
   image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-  image_createInfo.tiling = VK_IMAGE_TILING_LINEAR;
+  image_createInfo.tiling = (imageFlags & NVG_IMAGE_RENDER_TARGET) ? VK_IMAGE_TILING_OPTIMAL : VK_IMAGE_TILING_LINEAR;
   image_createInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
   image_createInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+  if (imageFlags & NVG_IMAGE_RENDER_TARGET)
+    image_createInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   image_createInfo.queueFamilyIndexCount = 0;
   image_createInfo.pQueueFamilyIndices = nullptr;
   image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -1997,6 +2009,22 @@ error:
 }
 
 static void nvgDeleteVk(NVGcontext *ctx) { nvgDeleteInternal(ctx); }
+
+int vknvgCreateImageFromHandle(NVGcontext* ctx, VkImageView imageView, int w, int h, int imageFlags) {
+  VKNVGcontext* vk = (VKNVGcontext*)nvgInternalParams(ctx)->userPtr;
+  VKNVGtexture* tex = vknvg_allocTexture(vk);
+  
+  if (tex == NULL) return 0;
+  
+  tex->type = NVG_TEXTURE_RGBA;
+  tex->view = imageView;
+  tex->flags = imageFlags;
+  tex->width = w;
+  tex->height = h;
+  tex->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  
+  return vknvg_textureId(vk, tex);
+}
 
 static void vknvg_setDynamicState(VKNVGcontext *vk, VkCommandBuffer cmd, const VKNVGCreatePipelineKey *pipelineKey) {
   if (vk->ext.dynamicState) {

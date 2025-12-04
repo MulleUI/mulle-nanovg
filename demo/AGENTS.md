@@ -1,5 +1,43 @@
 # Agent and AI information
 
+## 🚨 CRITICAL BUILD RULE - NEVER VIOLATE THIS 🚨
+
+**YOU MUST ALWAYS USE `mulle-sde craft` TO BUILD**
+
+### What NOT to do (FORBIDDEN):
+- ❌ NEVER use `ninja` directly
+- ❌ NEVER use `cmake` directly  
+- ❌ NEVER use `gcc` or `cc` directly
+- ❌ NEVER run executables from `kitchen/Debug/` directly
+- ❌ NEVER use `cd kitchen/Debug && ninja target`
+
+### What TO do (MANDATORY):
+- ✅ ALWAYS use `mulle-sde craft` to build
+- ✅ ALWAYS use `mulle-sde run <target>` to run executables
+- ✅ ALWAYS use `mulle-sde debug stacktrace <target>` for debugging
+
+### Why this matters:
+Using ninja/cmake directly bypasses mulle-sde's build system and can:
+- Build with stale dependencies
+- Miss environment setup
+- Use wrong compiler flags
+- Waste time with incomplete builds
+
+### If you catch yourself typing:
+- `ninja` → STOP. Use `mulle-sde craft`
+- `./kitchen/Debug/program` → STOP. Use `mulle-sde run program`
+- `cd kitchen/Debug` → STOP. Stay in project root
+- `timeout N mulle-sde run` → STOP. Use `mulle-sde run` without timeout
+
+### NEVER use timeout with mulle-sde run:
+`mulle-sde run` handles timeouts internally. Using `timeout` can:
+- Kill the build process if mulle-sde decides to rebuild
+- Leave the build in an inconsistent state
+- Lead to wrong conclusions about what's working
+- Waste time debugging phantom issues
+
+**NO EXCEPTIONS. NO SHORTCUTS. ALWAYS USE MULLE-SDE.**
+
 ## MANDATORY FIRST STEPS - DO THIS IMMEDIATELY
 
 🚨 **CRITICAL: YOU MUST DO THIS AT THE START OF EVERY CHAT SESSION** 🚨

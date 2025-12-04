@@ -1516,6 +1516,24 @@ void d3dnvgBindFramebuffer(struct NVGcontext* ctx, int texId)
     D3D_API_2(device->pDeviceContext, RSSetViewports, 1, &viewport);
 }
 
+void d3dnvgClearWithColor(struct NVGcontext* ctx, NVGcolor color)
+{
+    // Clear both color and stencil buffers
+    // This is consistent across all backends (GL, Metal, D3D11)
+    // Depth is not cleared as it's not used in 2D rendering
+    D3DNVGdevice* device = d3dnvgGetDevice(ctx);
+    float alpha = color.a;
+    float clearColor[4] = {
+        color.r * alpha,
+        color.g * alpha,
+        color.b * alpha,
+        color.a
+    };
+    D3D_API_2(device->pDeviceContext, ClearRenderTargetView, device->pTargetView, clearColor);
+    D3D_API_3(device->pDeviceContext, ClearDepthStencilView, device->pDepthStencilView, 
+              D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
 int d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags)
 {
     struct NVGparams* params = nvgInternalParams(ctx);
@@ -1544,6 +1562,11 @@ int d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags)
     }
 
     return texId;
+}
+
+void d3dnvgDeleteFramebuffer(struct NVGcontext* ctx, int fb)
+{
+    nvgDeleteImage(ctx, fb);
 }
 
 void d3dnvgCopyImage(struct NVGcontext* ctx, int imgDest, int imgSrc)

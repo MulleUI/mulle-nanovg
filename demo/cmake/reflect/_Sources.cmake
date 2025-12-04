@@ -14,9 +14,16 @@ set( SOURCES
 src/demo.c
 src/main-darwin-gl-fbo.c
 src/main-darwin-mtl-fbo.m
+src/main-darwin-vulkan.c
+src/main-darwin-vulkan-fbo.c
 src/main-linux-gles.c
 src/main-linux-gl-fbo.c
+src/main-linux-vk-nvg.c
+src/main-linux-vk-only.c
 src/main-linux-vulkan.c
+src/main-linux-vulkan-fbo.c
+src/main-linux-vulkan-fbo-minimal.c
+src/main-linux-vulkan-minimal.c
 src/main-macos.m
 src/main-vulkan.c
 src/main-windows.c

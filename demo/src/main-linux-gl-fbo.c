@@ -9,11 +9,10 @@
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
 
-#define NANOVG_GLES3
-#include <mulle-nanovg.h>
-
-#define MULLE_NANOVG_UTILS_IMPLEMENTATION
-#include <mulle-nanovg-utils.h>
+#define NANOVG_GLES3_IMPLEMENTATION
+#include <nanovg.h>
+#include <nanovg_gl.h>
+#include <nanovg_gl_utils.h>
 
 static void renderPattern(NVGcontext* vg, NVGframebuffer fb, float t, float pxRatio)
 {

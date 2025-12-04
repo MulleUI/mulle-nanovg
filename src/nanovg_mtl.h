@@ -80,6 +80,7 @@ void nvgDeleteMTL(NVGcontext* ctx);
 // Binds the specified framebuffer as the current render pass.
 void mnvgBindFramebuffer(NVGcontext* ctx, NVGframebuffer fb);
 NVGframebuffer mnvgCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
+void mnvgDeleteFramebuffer(NVGcontext* ctx, NVGframebuffer fb);
 
 //
 // Metal bridging functions

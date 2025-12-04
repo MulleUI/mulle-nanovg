@@ -152,7 +152,8 @@ enum NVGimageFlags {
 	NVG_IMAGE_PREMULTIPLIED		= 1<<4,		// Image data has premultiplied alpha.
 	NVG_IMAGE_NEAREST			= 1<<5,		// Image interpolation is Nearest instead Linear
 	NVG_IMAGE_MSAA          = 1<<6,     // only usable with nvgluCreateFramebuffer
-	NVG_IMAGE_RBO_LESS      = 1<<7      // convenience for framebuffer creation
+	NVG_IMAGE_RBO_LESS      = 1<<7,     // convenience for framebuffer creation
+	NVG_IMAGE_RENDER_TARGET = 1<<8      // Image can be used as render target (Vulkan: adds COLOR_ATTACHMENT usage)
 	// NVG_IMAGE_NODELETE 1 <<16 (defined elsewhere)
 };
 

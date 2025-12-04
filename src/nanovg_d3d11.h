@@ -36,7 +36,9 @@ void nvgDeleteD3D11(struct NVGcontext* ctx);
 
 // Framebuffer support
 NVGframebuffer d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags);
+void d3dnvgDeleteFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb);
 void d3dnvgBindFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb);
+void d3dnvgClearWithColor(struct NVGcontext* ctx, NVGcolor color);
 
 // Optional utilities
 void d3dnvgCopyImage(struct NVGcontext* ctx, int imgDest, int imgSrc);

@@ -1,0 +1,203 @@
+// Pure Vulkan FBO test - no NanoVG, just Vulkan API
+// Blue offscreen texture displayed on red background
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#include "vulkan_util.h"
+
+// Simple vertex shader - fullscreen quad
+static const char* vertShaderCode = 
+"#version 450\n"
+"layout(location = 0) out vec2 outUV;\n"
+"void main() {\n"
+"    outUV = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);\n"
+"    gl_Position = vec4(outUV * 2.0 - 1.0, 0.0, 1.0);\n"
+"}\n";
+
+// Simple fragment shader - sample texture
+static const char* fragShaderCode =
+"#version 450\n"
+"layout(location = 0) in vec2 inUV;\n"
+"layout(location = 0) out vec4 outColor;\n"
+"layout(binding = 0) uniform sampler2D texSampler;\n"
+"void main() {\n"
+"    outColor = texture(texSampler, inUV);\n"
+"}\n";
+
+int main(void)
+{
+   GLFWwindow *window;
+   VkInstance instance;
+   VkSurfaceKHR surface;
+   VulkanDevice *device;
+   VkQueue queue;
+   VkResult res;
+   uint32_t gpuCount, gpuIdx, j;
+   VkPhysicalDevice gpu[32];
+   VkNvgExt extQuery = {0};
+   FrameBuffers fb;
+   int winWidth, winHeight;
+
+   printf("Pure Vulkan FBO test...\n");
+   
+   if(!glfwInit())
+   {
+      printf("Failed to init GLFW.\n");
+      return -1;
+   }
+
+   if(!glfwVulkanSupported())
+   {
+      printf("Vulkan not supported.\n");
+      glfwTerminate();
+      return -1;
+   }
+
+   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+   window = glfwCreateWindow(800, 600, "Pure Vulkan FBO Test", NULL, NULL);
+   if(!window)
+   {
+      glfwTerminate();
+      return -1;
+   }
+
+   instance = createVkInstance(false);
+   if(instance == VK_NULL_HANDLE)
+   {
+      printf("Failed to create Vulkan instance\n");
+      glfwTerminate();
+      return -1;
+   }
+
+   res = glfwCreateWindowSurface(instance, window, NULL, &surface);
+   if(res != VK_SUCCESS)
+   {
+      printf("Failed to create surface\n");
+      glfwTerminate();
+      return -1;
+   }
+
+   gpuCount = 0;
+   res = vkEnumeratePhysicalDevices(instance, &gpuCount, NULL);
+   if(res != VK_SUCCESS || gpuCount < 1)
+   {
+      printf("No Vulkan device found.\n");
+      glfwTerminate();
+      return -1;
+   }
+
+   vkEnumeratePhysicalDevices(instance, &gpuCount, gpu);
+
+   gpuIdx = 0;
+   for(j = 0; j < gpuCount; j++)
+   {
+      uint32_t qfc = 0;
+      vkGetPhysicalDeviceQueueFamilyProperties(gpu[j], &qfc, NULL);
+      if(qfc >= 1)
+      {
+         gpuIdx = j;
+         break;
+      }
+   }
+
+   memset(&extQuery, 0, sizeof(extQuery));
+   device = createVulkanDevice(gpu[gpuIdx], surface, &extQuery);
+   if(device == NULL)
+   {
+      printf("Failed to create Vulkan device\n");
+      vkDestroySurfaceKHR(instance, surface, NULL);
+      vkDestroyInstance(instance, NULL);
+      glfwTerminate();
+      return -1;
+   }
+
+   glfwGetWindowSize(window, &winWidth, &winHeight);
+   vkGetDeviceQueue(device->device, device->graphicsQueueFamilyIndex, 0, &queue);
+
+   fb = createFrameBuffers(device, surface, queue, winWidth, winHeight, 0);
+
+   printf("Vulkan setup complete\n");
+   printf("TODO: Create offscreen FBO, render blue, display on screen\n");
+
+   // Main loop - just clear to red for now
+   VkCommandBuffer *cmdBuffers = createCmdBuffer(device->device, device->commandPool, fb.swapchain_image_count);
+   
+   while(!glfwWindowShouldClose(window))
+   {
+      VkResult res;
+      VkCommandBufferBeginInfo beginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+      VkRenderPassBeginInfo rpBegin = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+      VkClearValue clearValues[2];
+      VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      VkSubmitInfo submitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+      VkPresentInfoKHR presentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+
+      res = vkAcquireNextImageKHR(device->device, fb.swap_chain, UINT64_MAX,
+                                  fb.present_complete_semaphore[fb.current_frame],
+                                  VK_NULL_HANDLE, &fb.current_buffer);
+      if(res == VK_ERROR_OUT_OF_DATE_KHR)
+         continue;
+
+      vkBeginCommandBuffer(cmdBuffers[fb.current_frame], &beginInfo);
+
+      clearValues[0].color.float32[0] = 1.0f;  // Red
+      clearValues[0].color.float32[1] = 0.0f;
+      clearValues[0].color.float32[2] = 0.0f;
+      clearValues[0].color.float32[3] = 1.0f;
+      clearValues[1].depthStencil.depth = 1.0f;
+      clearValues[1].depthStencil.stencil = 0;
+
+      rpBegin.renderPass = fb.render_pass;
+      rpBegin.framebuffer = fb.framebuffers[fb.current_buffer];
+      rpBegin.renderArea.extent = fb.buffer_size;
+      rpBegin.clearValueCount = 2;
+      rpBegin.pClearValues = clearValues;
+
+      vkCmdBeginRenderPass(cmdBuffers[fb.current_frame], &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
+      vkCmdEndRenderPass(cmdBuffers[fb.current_frame]);
+      vkEndCommandBuffer(cmdBuffers[fb.current_frame]);
+
+      submitInfo.waitSemaphoreCount = 1;
+      submitInfo.pWaitSemaphores = &fb.present_complete_semaphore[fb.current_frame];
+      submitInfo.pWaitDstStageMask = &waitStages;
+      submitInfo.commandBufferCount = 1;
+      submitInfo.pCommandBuffers = &cmdBuffers[fb.current_frame];
+      submitInfo.signalSemaphoreCount = 1;
+      submitInfo.pSignalSemaphores = &fb.render_complete_semaphore[fb.current_frame];
+
+      vkQueueSubmit(queue, 1, &submitInfo, fb.flight_fence[fb.current_frame]);
+
+      presentInfo.waitSemaphoreCount = 1;
+      presentInfo.pWaitSemaphores = &fb.render_complete_semaphore[fb.current_frame];
+      presentInfo.swapchainCount = 1;
+      presentInfo.pSwapchains = &fb.swap_chain;
+      presentInfo.pImageIndices = &fb.current_buffer;
+
+      vkQueuePresentKHR(queue, &presentInfo);
+
+      fb.current_frame = (fb.current_frame + 1) % fb.swapchain_image_count;
+      fb.num_swaps++;
+
+      if(fb.num_swaps >= fb.swapchain_image_count)
+      {
+         vkWaitForFences(device->device, 1, &fb.flight_fence[fb.current_frame], VK_TRUE, UINT64_MAX);
+         vkResetFences(device->device, 1, &fb.flight_fence[fb.current_frame]);
+      }
+
+      glfwPollEvents();
+   }
+
+   vkDeviceWaitIdle(device->device);
+   free(cmdBuffers);
+   destroyFrameBuffers(device, &fb, queue);
+   destroyVulkanDevice(device);
+   vkDestroySurfaceKHR(instance, surface, NULL);
+   vkDestroyInstance(instance, NULL);
+   glfwTerminate();
+   
+   return 0;
+}

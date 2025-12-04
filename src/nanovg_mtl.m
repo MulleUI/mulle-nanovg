@@ -535,7 +535,15 @@ NVGframebuffer mnvgCreateFramebuffer(NVGcontext* ctx, int width,
   return (NVGframebuffer) (intptr_t) image;
 }
 
+void mnvgDeleteFramebuffer(NVGcontext* ctx, NVGframebuffer fb) {
+  nvgDeleteImage(ctx, (int)(intptr_t)fb);
+}
+
 void mnvgClearWithColor(NVGcontext* ctx, NVGcolor color) {
+  // Clear both color and stencil buffers
+  // This is consistent across all backends (GL, Metal, D3D11)
+  // Depth is not cleared as it's not used in 2D rendering
+  // Note: Stencil is always cleared to 0 in Metal render pass setup
   MNVGcontext* mtl = (__bridge MNVGcontext*)nvgInternalParams(ctx)->userPtr;
   float alpha = (float)color.a;
   mtl.clearColor = MTLClearColorMake((float)color.r * alpha,
