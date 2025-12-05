@@ -294,12 +294,17 @@ void vknvgDeleteFramebuffer( NVGcontext *ctx, NVGframebuffer fb)
       tex = vknvg_findTexture( vk, vkfb->nvgImageHandle);
       if( tex)
       {
+         // Destroy the sampler (created by vknvgCreateImageFromHandle)
+         if( tex->sampler)
+            vkDestroySampler( device, tex->sampler, allocator);
          // Clear the texture entry but don't destroy image/view/memory
          tex->image   = VK_NULL_HANDLE;
          tex->view    = VK_NULL_HANDLE;
          tex->mem     = VK_NULL_HANDLE;
          tex->sampler = VK_NULL_HANDLE;
       }
+      // Delete the NanoVG image handle to free the texture slot
+      nvgDeleteImage( ctx, vkfb->nvgImageHandle);
    }
    
    // Now delete Vulkan objects

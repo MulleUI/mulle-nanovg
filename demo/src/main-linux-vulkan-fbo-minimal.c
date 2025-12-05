@@ -346,6 +346,7 @@ int main(void)
    }
 
    vkDeviceWaitIdle(device->device);
+   nvgDeleteVk(vgFbo);  // Delete offscreen context
    vknvgDeleteFramebuffer(vg, fbo);
    nvgDeleteVk(vg);
    destroyFrameBuffers(device, &fb, queue);

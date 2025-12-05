@@ -271,16 +271,30 @@ static int D3Dnvg__createShader(struct D3DNVGcontext* D3D, struct D3DNVGshader* 
 {
 	ID3D11VertexShader* vert = NULL;
 	ID3D11PixelShader* frag = NULL;
+	HRESULT hr;
 
 	memset(shader, 0, sizeof(*shader));
 
-	// Shader byte code is created at compile time from the .hlsl files.
-	// No need for error checks; shader errors can be fixed in the IDE.
-	D3D_API_4(D3D->pDevice, CreateVertexShader, vshader, vshader_size, NULL, &vert);
-	D3D_API_4(D3D->pDevice, CreatePixelShader, fshader, fshader_size, NULL, &frag);
+	printf("D3Dnvg__createShader: Creating vertex shader (size=%u)...\n", vshader_size);
+	fflush(stdout);
+	hr = D3D_API_4(D3D->pDevice, CreateVertexShader, vshader, vshader_size, NULL, &vert);
+	if (D3Dnvg__checkError(hr, "Create Vertex Shader"))
+		return 0;
+	
+	printf("D3Dnvg__createShader: Creating pixel shader (size=%u)...\n", fshader_size);
+	fflush(stdout);
+	hr = D3D_API_4(D3D->pDevice, CreatePixelShader, fshader, fshader_size, NULL, &frag);
+	if (D3Dnvg__checkError(hr, "Create Pixel Shader"))
+	{
+		D3D_API_RELEASE(vert);
+		return 0;
+	}
 
 	shader->vert = vert;
 	shader->frag = frag;
+	
+	printf("D3Dnvg__createShader: Success (vert=%p, frag=%p)\n", vert, frag);
+	fflush(stdout);
 
 	return 1;
 }
@@ -443,17 +457,20 @@ static int D3Dnvg__renderCreate(void* uptr)
 	// Create the vertex buffer.
 	bufferDesc.ByteWidth = sizeof(struct NVGvertex)* D3D->VertexBuffer.MaxBufferEntries;
 	hr = D3D_API_3(D3D->pDevice, CreateBuffer, &bufferDesc, NULL, &D3D->VertexBuffer.pBuffer);
-	D3Dnvg__checkError(hr, "Create Vertex Buffer");
+	if (D3Dnvg__checkError(hr, "Create Vertex Buffer"))
+		return 0;
 
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.ByteWidth = sizeof(UINT32)* D3D->VertexBuffer.MaxBufferEntries;
 	hr = D3D_API_3(D3D->pDevice, CreateBuffer, &bufferDesc, NULL, &D3D->pFanIndexBuffer);
-	D3Dnvg__checkError(hr, "Create Vertex Buffer Static");
+	if (D3Dnvg__checkError(hr, "Create Vertex Buffer Static"))
+		return 0;
 
 	D3Dnvg_buildFanIndices(D3D);
 
 	hr = D3D_API_5(D3D->pDevice, CreateInputLayout, LayoutRenderTriangles, 2, g_D3D11VertexShader_Main, sizeof(g_D3D11VertexShader_Main), &D3D->pLayoutRenderTriangles);
-	D3Dnvg__checkError(hr, "Create Input Layout");
+	if (D3Dnvg__checkError(hr, "Create Input Layout"))
+		return 0;
 
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -466,7 +483,8 @@ static int D3Dnvg__renderCreate(void* uptr)
 	}
 
 	hr = D3D_API_3(D3D->pDevice, CreateBuffer, &bufferDesc, NULL, &D3D->pVSConstants);
-	D3Dnvg__checkError(hr, "Create Constant Buffer");
+	if (D3Dnvg__checkError(hr, "Create Constant Buffer"))
+		return 0;
 
 	bufferDesc.ByteWidth = sizeof(struct D3DNVGfragUniforms);
 	if ((bufferDesc.ByteWidth % 16) != 0)
@@ -476,7 +494,8 @@ static int D3Dnvg__renderCreate(void* uptr)
 	D3D->fragSize = bufferDesc.ByteWidth;
 
 	hr = D3D_API_3(D3D->pDevice, CreateBuffer, &bufferDesc, NULL, &D3D->pPSConstants);
-	D3Dnvg__checkError(hr, "Create Constant Buffer");
+	if (D3Dnvg__checkError(hr, "Create Constant Buffer"))
+		return 0;
 
 	ZeroMemory(&rasterDesc, sizeof(rasterDesc));
 	rasterDesc.FillMode = D3D11_FILL_SOLID;
@@ -668,6 +687,58 @@ static int D3Dnvg__renderDeleteTexture(void* uptr, int image)
 {
 	struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)uptr;
 	return D3Dnvg__deleteTexture(D3D, image);
+}
+
+static int D3Dnvg__renderDefineTexture(void* uptr, int w, int h, int flags, int type, void *texture)
+{
+	struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)uptr;
+	struct D3DNVGtexture* tex;
+
+	tex = D3Dnvg__allocTexture(D3D);
+	if (!tex) return 0;
+
+	tex->width  = w;
+	tex->height = h;
+	tex->flags  = flags;
+	tex->type   = type;
+	tex->tex    = (ID3D11Texture2D*)(intptr_t)texture;
+
+	return tex->id;
+}
+
+static int D3Dnvg__renderForgetTexture(void* uptr, int image)
+{
+	struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)uptr;
+	struct D3DNVGtexture* tex = D3Dnvg__findTexture(D3D, image);
+
+	if (!tex)
+		return 0;
+
+	tex->tex = NULL;
+	tex->flags |= NVG_IMAGE_NODELETE;
+	return 1;
+}
+
+static int D3Dnvg__renderGetTextureInfo(void* uptr, int image, int *p_flags, int *p_type, void **p_tex)
+{
+	struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)uptr;
+	struct D3DNVGtexture* tex = D3Dnvg__findTexture(D3D, image);
+
+	if (!tex)
+		return 0;
+
+	if (p_flags)
+		*p_flags = tex->flags;
+	if (p_type)
+		*p_type  = tex->type;
+	if (p_tex)
+		*p_tex   = (void*)(intptr_t)tex->tex;
+	return 1;
+}
+
+static int D3Dnvg__renderValidatePaintTexture(void* uptr, int image)
+{
+	return 1;
 }
 
 static int D3Dnvg__renderUpdateTexture(void* uptr, int image, int x, int y, int w, int h, const unsigned char* data)
@@ -1405,16 +1476,25 @@ struct NVGcontext* nvgCreateD3D11(void* ID3D11Device_pDevice, int flags)
 	struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)NVG_MALLOC(sizeof(struct D3DNVGcontext));
 	if (D3D == NULL)
 	{
+		printf("nvgCreateD3D11: Failed to allocate D3DNVGcontext\n");
+		fflush(stdout);
 		goto error;
 	}
 	memset(D3D, 0, sizeof(struct D3DNVGcontext));
 	D3D->pDevice = (ID3D11Device*)ID3D11Device_pDevice;
 	D3D_API_1(D3D->pDevice, GetImmediateContext, &D3D->pDeviceContext);
+	
+	printf("nvgCreateD3D11: Device=%p, Context=%p\n", D3D->pDevice, D3D->pDeviceContext);
+	fflush(stdout);
 
 	memset(&params, 0, sizeof(params));
 	params.renderCreate = D3Dnvg__renderCreate;
 	params.renderCreateTexture = D3Dnvg__renderCreateTexture;
 	params.renderDeleteTexture = D3Dnvg__renderDeleteTexture;
+	params.renderDefineTexture = D3Dnvg__renderDefineTexture;
+	params.renderForgetTexture = D3Dnvg__renderForgetTexture;
+	params.renderGetTextureInfo = D3Dnvg__renderGetTextureInfo;
+	params.renderValidatePaintTexture = D3Dnvg__renderValidatePaintTexture;
 	params.renderUpdateTexture = D3Dnvg__renderUpdateTexture;
 	params.renderGetTextureSize = D3Dnvg__renderGetTextureSize;
 	params.renderViewport = D3Dnvg__renderViewport;
@@ -1426,30 +1506,21 @@ struct NVGcontext* nvgCreateD3D11(void* ID3D11Device_pDevice, int flags)
 	params.renderDelete = D3Dnvg__renderDelete;
 	params.userPtr = D3D;
 	params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
-	
-	// Set context type and state stack size based on flags
-	switch (flags & (NVG_PATH_ONLY | NVG_FONT_ONLY)) {
-		case 0:
-			params.contextType = NVG_FULL_CONTEXT;
-			params.cStates = 32;  // NVG_MAX_STATES
-			break;
-		case NVG_PATH_ONLY:
-			params.contextType = NVG_PATH_CONTEXT;
-			params.cStates = 1;   // NVG_MIN_STATES
-			break;
-		case NVG_FONT_ONLY:
-			params.contextType = NVG_FONT_CONTEXT;
-			params.cStates = 32;  // NVG_MAX_STATES
-			break;
-		default:
-			goto error;
-	}
+	params.cStates = 32;  // NVG_MAX_STATES
 
 	D3D->flags = flags;
 
+	printf("nvgCreateD3D11: Calling nvgCreateInternal...\n");
+	fflush(stdout);
 	ctx = nvgCreateInternal(&params);
-	if (ctx == NULL) goto error;
-
+	if (ctx == NULL) {
+		printf("nvgCreateD3D11: nvgCreateInternal failed\n");
+		fflush(stdout);
+		goto error;
+	}
+	
+	printf("nvgCreateD3D11: Success\n");
+	fflush(stdout);
 	return ctx;
 
 error:
@@ -1485,10 +1556,11 @@ static D3DNVGdevice* d3dnvgGetDevice(struct NVGcontext* ctx)
     return (D3DNVGdevice*)D3D->userPtr;
 }
 
-void d3dnvgBindFramebuffer(struct NVGcontext* ctx, int texId)
+void d3dnvgBindFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb)
 {
     D3DNVGdevice* device = d3dnvgGetDevice(ctx);
     D3D11_VIEWPORT viewport;
+    int texId = (int)(intptr_t)fb;
     
     ZeroMemory(&viewport, sizeof(viewport));
     viewport.TopLeftX = 0;
@@ -1530,11 +1602,11 @@ void d3dnvgClearWithColor(struct NVGcontext* ctx, NVGcolor color)
         color.a
     };
     D3D_API_2(device->pDeviceContext, ClearRenderTargetView, device->pTargetView, clearColor);
-    D3D_API_3(device->pDeviceContext, ClearDepthStencilView, device->pDepthStencilView, 
+    D3D_API_4(device->pDeviceContext, ClearDepthStencilView, device->pDepthStencilView, 
               D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
-int d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags)
+NVGframebuffer d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags)
 {
     struct NVGparams* params = nvgInternalParams(ctx);
     struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)params->userPtr;
@@ -1558,15 +1630,15 @@ int d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags)
     
     if (FAILED(hr))
     {
-        return 0;
+        return (NVGframebuffer)0;
     }
 
-    return texId;
+    return (NVGframebuffer)(intptr_t)texId;
 }
 
-void d3dnvgDeleteFramebuffer(struct NVGcontext* ctx, int fb)
+void d3dnvgDeleteFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb)
 {
-    nvgDeleteImage(ctx, fb);
+    nvgDeleteImage(ctx, (int)(intptr_t)fb);
 }
 
 void d3dnvgCopyImage(struct NVGcontext* ctx, int imgDest, int imgSrc)

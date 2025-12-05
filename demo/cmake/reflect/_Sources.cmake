@@ -27,6 +27,7 @@ src/main-linux-vulkan-minimal.c
 src/main-macos.m
 src/main-vulkan.c
 src/main-windows.c
+src/main-windows-d3d11-minimal.c
 ../src/mulle-nanovg.c
 ../src/nanovg.c
 ../src/nanovg_d3d11.c

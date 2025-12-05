@@ -19,16 +19,20 @@
 #ifndef NANOVG_D3D11_H
 #define NANOVG_D3D11_H
 
+#include "nanovg.h"
+#include "nanovg-framebuffer.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Flag indicating if geoemtry based anti-aliasing is used (may not be needed when using MSAA).
-#define NVG_ANTIALIAS 1
-
-// Flag indicating if strokes should be drawn using stencil buffer. The rendering will be a little
-// slower, but path overlaps (i.e. self-intersecting or sharp turns) will be drawn just once.
-#define NVG_STENCIL_STROKES 2
+enum NVGcreateFlags {
+	NVG_ANTIALIAS       = 1<<0,
+	NVG_STENCIL_STROKES = 1<<1,
+	NVG_DEBUG           = 1<<2,
+	NVG_PATH_ONLY       = 1<<3,
+	NVG_FONT_ONLY       = 1<<4
+};
 
 // Can't forward declare struct ID3D11Device because Windows typedef it...
 struct NVGcontext* nvgCreateD3D11(void* ID3D11Device_pDevice, int edgeaa);
@@ -48,7 +52,6 @@ void d3dnvgReadPixels(struct NVGcontext* ctx, int image, int x, int y, int width
 // These are additional flags on top of NVGimageFlags.
 enum NVGimageFlagsD3D11 {
 	NVG_IMAGE_NODELETE          = 1<<16, // Do not delete texture object.
-	NVG_IMAGE_RENDER_TARGET     = 1<<17,
 	NVG_IMAGE_USAGE_DYNAMIC     = 1<<18,
 	NVG_IMAGE_USAGE_STAGING     = 1<<19,
 };
@@ -57,5 +60,4 @@ enum NVGimageFlagsD3D11 {
 }
 #endif
 
-#endif //NANOVG_D3D11_H// Implementation in nanovg_d3d11.c
 #endif //NANOVG_D3D11_H
