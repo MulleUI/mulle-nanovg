@@ -85,7 +85,6 @@ int main( int argc, char** argv)
    {
       uint32_t   qfc;
       
-      qfc = 0;
       vkGetPhysicalDeviceQueueFamilyProperties( gpu[i], &qfc, NULL);
       if( qfc >= 1)
       {

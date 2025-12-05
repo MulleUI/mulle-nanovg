@@ -105,10 +105,10 @@ int main(void)
 {
    FrameBuffers fb;
    GLFWwindow *window;
-   NVGcontext *vg;
+   NVGcontext *vg, *vgFbo;
    NVGframebuffer fbo;
    VKNVGCreateInfo createInfo;
-   VkCommandBuffer *cmdBuffers;
+   VkCommandBuffer *cmdBuffers, fboCmd;
    VkInstance instance;
    VkNvgExt extQuery;
    VkQueue queue;
@@ -230,6 +230,36 @@ int main(void)
    }
    printf("FBO created, image ID: %d\n", (int)(intptr_t)fbo);
 
+   // Allocate separate command buffer for FBO rendering
+   VkCommandBufferAllocateInfo allocInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+   allocInfo.commandPool = device->commandPool;
+   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   allocInfo.commandBufferCount = 1;
+   vkAllocateCommandBuffers(device->device, &allocInfo, &fboCmd);
+
+   // Create separate NanoVG context for FBO rendering
+   static uint32_t fboCurrentFrame = 0;
+   VKNVGCreateInfo fboCreateInfo;
+   VKNVGframebuffer *vkfb = (VKNVGframebuffer*)fbo;
+   
+   memset(&fboCreateInfo, 0, sizeof(fboCreateInfo));
+   fboCreateInfo.device = device->device;
+   fboCreateInfo.gpu = device->gpu;
+   fboCreateInfo.renderpass = vkfb->renderPass;
+   fboCreateInfo.cmdBuffer = &fboCmd;
+   fboCreateInfo.swapchainImageCount = 1;
+   fboCreateInfo.currentFrame = &fboCurrentFrame;
+   fboCreateInfo.ext.dynamicState = extQuery.dynamicState;
+   fboCreateInfo.ext.colorBlendEquation = extQuery.colorBlendEquation;
+   fboCreateInfo.ext.colorWriteMask = extQuery.colorWriteMask;
+   
+   vgFbo = nvgCreateVk(fboCreateInfo, NVG_ANTIALIAS | NVG_STENCIL_STROKES, queue);
+   if(!vgFbo)
+   {
+      printf("Could not create FBO NanoVG context.\n");
+      return -1;
+   }
+
    printf("Starting render loop...\n");
    glfwSetTime(0);
 
@@ -242,16 +272,60 @@ int main(void)
       pxRatio = (float)fbWidth / (float)winWidth;
 
       // Render to offscreen FBO - fill with blue
-      vknvgBindFramebuffer(vg, fbo);
-      nvgBeginFrame(vg, 200, 200, 1.0f);
+      VKNVGframebuffer *vkfb = (VKNVGframebuffer*)fbo;
       
-      nvgBeginPath(vg);
-      nvgRect(vg, 0, 0, 200, 200);
-      nvgFillColor(vg, nvgRGBA(0, 0, 255, 255));
-      nvgFill(vg);
+      VkCommandBufferBeginInfo fboBegin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+      fboBegin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+      vkBeginCommandBuffer(fboCmd, &fboBegin);
       
-      nvgEndFrame(vg);
-      vknvgBindFramebuffer(vg, NULL);
+      VkClearValue clearValues[2];
+      clearValues[0].color.float32[0] = 0.0f;
+      clearValues[0].color.float32[1] = 0.0f;
+      clearValues[0].color.float32[2] = 0.0f;
+      clearValues[0].color.float32[3] = 0.0f;
+      clearValues[1].depthStencil.depth = 1.0f;
+      clearValues[1].depthStencil.stencil = 0;
+      
+      VkRenderPassBeginInfo rpBegin = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+      rpBegin.renderPass = vkfb->renderPass;
+      rpBegin.framebuffer = vkfb->framebuffer;
+      rpBegin.renderArea.extent.width = 200;
+      rpBegin.renderArea.extent.height = 200;
+      rpBegin.clearValueCount = 2;
+      rpBegin.pClearValues = clearValues;
+      
+      vkCmdBeginRenderPass(fboCmd, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
+      
+      VkViewport viewport = {0};
+      viewport.width = 200.0f;
+      viewport.height = 200.0f;
+      viewport.maxDepth = 1.0f;
+      vkCmdSetViewport(fboCmd, 0, 1, &viewport);
+      
+      VkRect2D scissor = {0};
+      scissor.extent.width = 200;
+      scissor.extent.height = 200;
+      vkCmdSetScissor(fboCmd, 0, 1, &scissor);
+      
+      vknvgBindFramebuffer(vgFbo, fbo);
+      nvgBeginFrame(vgFbo, 200, 200, 1.0f);
+      
+      nvgBeginPath(vgFbo);
+      nvgRect(vgFbo, 0, 0, 200, 200);
+      nvgFillColor(vgFbo, nvgRGBA(0, 0, 255, 255));
+      nvgFill(vgFbo);
+      
+      nvgEndFrame(vgFbo);
+      vknvgBindFramebuffer(vgFbo, NULL);
+      
+      vkCmdEndRenderPass(fboCmd);
+      vkEndCommandBuffer(fboCmd);
+      
+      VkSubmitInfo fboSubmit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+      fboSubmit.commandBufferCount = 1;
+      fboSubmit.pCommandBuffers = &fboCmd;
+      vkQueueSubmit(queue, 1, &fboSubmit, VK_NULL_HANDLE);
+      vkQueueWaitIdle(queue);
 
       // Render to screen
       prepareFrame(device->device, cmdBuffers[fb.current_frame], &fb);
@@ -261,7 +335,7 @@ int main(void)
       // Draw rectangle with FBO texture
       nvgBeginPath(vg);
       nvgRect(vg, 100, 100, 200, 200);
-      nvgFillPaint(vg, nvgImagePattern(vg, 100, 100, 200, 200, 0, (int)(intptr_t)fbo, 1.0f));
+      nvgFillPaint(vg, nvgImagePattern(vg, 100, 100, 200, 200, 0, vkfb->nvgImageHandle, 1.0f));
       nvgFill(vg);
 
       nvgEndFrame(vg);

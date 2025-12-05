@@ -1104,6 +1104,12 @@ static void vknvg_setUniforms(VKNVGcontext *vk, VkDescriptorSet descSet, int uni
     tex = vknvg_findTexture(vk, 1);
   }
 
+  if( tex == NULL)
+  {
+     fprintf( stderr, "vknvg_setUniforms: texture %d not found (ntextures=%d)\n", image, vk->ntextures);
+     return;
+  }
+
   VkDescriptorImageInfo image_info;
   image_info.imageLayout = tex->imageLayout;
   image_info.imageView = tex->view;
@@ -2022,6 +2028,44 @@ int vknvgCreateImageFromHandle(NVGcontext* ctx, VkImageView imageView, int w, in
   tex->width = w;
   tex->height = h;
   tex->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  
+  VkDevice device = vk->createInfo.device;
+  const VkAllocationCallbacks* allocator = vk->createInfo.allocator;
+  
+  VkSamplerCreateInfo samplerCreateInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+  if( imageFlags & NVG_IMAGE_NEAREST)
+  {
+     samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
+     samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
+  }
+  else
+  {
+     samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+     samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+  }
+  samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+  if( imageFlags & NVG_IMAGE_REPEATX)
+  {
+     samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+     samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+     samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+  }
+  else
+  {
+     samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+     samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+     samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  }
+  samplerCreateInfo.mipLodBias = 0.0;
+  samplerCreateInfo.anisotropyEnable = VK_FALSE;
+  samplerCreateInfo.maxAnisotropy = 1;
+  samplerCreateInfo.compareEnable = VK_FALSE;
+  samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
+  samplerCreateInfo.minLod = 0.0;
+  samplerCreateInfo.maxLod = 0.0;
+  samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  
+  NVGVK_CHECK_RESULT(vkCreateSampler(device, &samplerCreateInfo, allocator, &tex->sampler));
   
   return vknvg_textureId(vk, tex);
 }
