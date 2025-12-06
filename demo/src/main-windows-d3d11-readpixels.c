@@ -175,11 +175,11 @@ int main(void)
    // Read pixels
    printf( "Reading pixels...\n");
    pixels = (unsigned char*)malloc( fbSize * fbSize * 4);
-   d3dnvgReadPixels( vg, (int)(intptr_t)fb, 0, 0, fbSize, fbSize, pixels);
+   d3dnvgReadPixels( vg, fb, 0, 0, fbSize, fbSize, pixels);
 
    // Save to PNG
-   printf( "Saving to output.png...\n");
-   stbi_write_png( "output.png", fbSize, fbSize, 4, pixels, fbSize * 4);
+   printf( "Saving to d3d11-output.png...\n");
+   stbi_write_png( "d3d11-output.png", fbSize, fbSize, 4, pixels + (fbSize - 1) * fbSize * 4, -fbSize * 4);
 
    free( pixels);
    nvgDeleteImage( vg, (int)(intptr_t)fb);
@@ -193,6 +193,6 @@ int main(void)
 
    glfwTerminate();
    
-   printf( "Done! Check output.png\n");
+   printf( "Done! Check d3d11-output.png\n");
    return( 0);
 }

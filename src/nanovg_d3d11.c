@@ -1625,7 +1625,7 @@ void d3dnvgWriteImage(struct NVGcontext* ctx, int image, void* data)
     D3D_API_2(D3D->pDeviceContext, Unmap, (ID3D11Resource*)tex->tex, 0);
 }
 
-void d3dnvgReadPixels(struct NVGcontext* ctx, int image, int x, int y, int width, int height, void* data)
+void d3dnvgReadPixels(struct NVGcontext* ctx, NVGframebuffer fb, int x, int y, int width, int height, void* data)
 {
    D3D11_MAPPED_SUBRESOURCE   resource;
    D3D11_TEXTURE2D_DESC       desc;
@@ -1638,9 +1638,11 @@ void d3dnvgReadPixels(struct NVGcontext* ctx, int image, int x, int y, int width
    unsigned char              *dst;
    unsigned char              *src;
    int                        row;
+   int                        image;
    
    params = nvgInternalParams( ctx);
    D3D    = (struct D3DNVGcontext*)params->userPtr;
+   image  = (int)(intptr_t)fb;
    tex    = D3Dnvg__findTexture( D3D, image);
    
    if( !tex || !tex->tex)

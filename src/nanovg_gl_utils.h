@@ -32,6 +32,7 @@ void nvgluBindFramebuffer(NVGframebuffer fb);
 NVGframebuffer nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
 void nvgluDeleteFramebuffer(NVGframebuffer fb);
 void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color);
+void glnvgReadPixels(NVGcontext* ctx, NVGframebuffer fb, int x, int y, int width, int height, void* data);
 
 #endif // NANOVG_GL_UTILS_H
 
@@ -245,6 +246,34 @@ void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color)
 #else
 	NVG_NOTUSED(ctx);
 	NVG_NOTUSED(color);
+#endif
+}
+
+void glnvgReadPixels(NVGcontext* ctx, NVGframebuffer fb, int x, int y, int width, int height, void* data)
+{
+#ifdef NANOVG_FBO_VALID
+	NVGLUframebuffer* glfb = (NVGLUframebuffer*)fb;
+	GLint prevFBO;
+	
+	NVG_NOTUSED(ctx);
+	
+	if (glfb) {
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, glfb->fbo);
+		glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+	} else {
+		// Read from currently bound framebuffer (window)
+		glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	}
+#else
+	NVG_NOTUSED(ctx);
+	NVG_NOTUSED(fb);
+	NVG_NOTUSED(x);
+	NVG_NOTUSED(y);
+	NVG_NOTUSED(width);
+	NVG_NOTUSED(height);
+	NVG_NOTUSED(data);
 #endif
 }
 

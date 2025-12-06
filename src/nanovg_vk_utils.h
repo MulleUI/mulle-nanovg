@@ -7,6 +7,7 @@ void vknvgBindFramebuffer( NVGcontext *ctx, NVGframebuffer fb);
 NVGframebuffer vknvgCreateFramebuffer( NVGcontext *ctx, int w, int h, int imageFlags);
 void vknvgDeleteFramebuffer( NVGcontext *ctx, NVGframebuffer fb);
 void vknvgClearWithColor( NVGcontext *ctx, NVGcolor color);
+void vknvgReadPixels( NVGcontext *ctx, NVGframebuffer fb, int x, int y, int width, int height, void *data);
 
 #endif
 
@@ -336,6 +337,170 @@ void vknvgClearWithColor( NVGcontext *ctx, NVGcolor color)
    vk               = (VKNVGcontext *) nvgInternalParams( ctx)->userPtr;
    vk->clearColor   = color;
    vk->pendingClear = 1;
+}
+
+void vknvgReadPixels( NVGcontext *ctx, NVGframebuffer fb, int x, int y, int width, int height, void *data)
+{
+   VKNVGcontext                  *vk;
+   VKNVGframebuffer              *vkfb;
+   VkDevice                      device;
+   const VkAllocationCallbacks   *allocator;
+   VkBuffer                      stagingBuffer;
+   VkDeviceMemory                stagingMemory;
+   VkBufferCreateInfo            bufferInfo;
+   VkMemoryRequirements          memReqs;
+   VkMemoryAllocateInfo          allocInfo;
+   VkCommandBuffer               cmdBuf;
+   VkCommandBufferAllocateInfo   cmdAllocInfo;
+   VkCommandBufferBeginInfo      beginInfo;
+   VkBufferImageCopy             region;
+   VkImageMemoryBarrier          barrier;
+   VkSubmitInfo                  submitInfo;
+   void                          *mapped;
+   uint32_t                      memTypeIndex;
+   unsigned char                 *src;
+   unsigned char                 *dst;
+   int                           row;
+   
+   vk        = (VKNVGcontext *) nvgInternalParams( ctx)->userPtr;
+   vkfb      = (VKNVGframebuffer *) fb;
+   device    = vk->createInfo.device;
+   allocator = vk->createInfo.allocator;
+   
+   if( ! vkfb || ! vkfb->colorImage)
+      return;
+   
+   // Create staging buffer
+   memset( &bufferInfo, 0, sizeof( bufferInfo));
+   bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+   bufferInfo.size        = width * height * 4;
+   bufferInfo.usage       = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+   
+   if( vkCreateBuffer( device, &bufferInfo, allocator, &stagingBuffer) != VK_SUCCESS)
+      return;
+   
+   vkGetBufferMemoryRequirements( device, stagingBuffer, &memReqs);
+   
+   if( vknvg_findMemoryType( vk->createInfo.gpu, memReqs.memoryTypeBits, 
+                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                             &memTypeIndex) != VK_SUCCESS)
+   {
+      vkDestroyBuffer( device, stagingBuffer, allocator);
+      return;
+   }
+   
+   memset( &allocInfo, 0, sizeof( allocInfo));
+   allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.allocationSize  = memReqs.size;
+   allocInfo.memoryTypeIndex = memTypeIndex;
+   
+   if( vkAllocateMemory( device, &allocInfo, allocator, &stagingMemory) != VK_SUCCESS)
+   {
+      vkDestroyBuffer( device, stagingBuffer, allocator);
+      return;
+   }
+   
+   vkBindBufferMemory( device, stagingBuffer, stagingMemory, 0);
+   
+   // Create command buffer from utility pool
+   memset( &cmdAllocInfo, 0, sizeof( cmdAllocInfo));
+   cmdAllocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+   cmdAllocInfo.commandPool        = vk->utilityCommandPool;
+   cmdAllocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   cmdAllocInfo.commandBufferCount = 1;
+   
+   if( vkAllocateCommandBuffers( device, &cmdAllocInfo, &cmdBuf) != VK_SUCCESS)
+   {
+      vkFreeMemory( device, stagingMemory, allocator);
+      vkDestroyBuffer( device, stagingBuffer, allocator);
+      return;
+   }
+   
+   memset( &beginInfo, 0, sizeof( beginInfo));
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+   
+   vkBeginCommandBuffer( cmdBuf, &beginInfo);
+   
+   // Transition image to transfer src
+   memset( &barrier, 0, sizeof( barrier));
+   barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+   barrier.oldLayout           = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+   barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+   barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   barrier.image               = vkfb->colorImage;
+   barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+   barrier.subresourceRange.baseMipLevel   = 0;
+   barrier.subresourceRange.levelCount     = 1;
+   barrier.subresourceRange.baseArrayLayer = 0;
+   barrier.subresourceRange.layerCount     = 1;
+   barrier.srcAccessMask       = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   barrier.dstAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+   
+   vkCmdPipelineBarrier( cmdBuf, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         0, 0, NULL, 0, NULL, 1, &barrier);
+   
+   // Copy image to buffer
+   memset( &region, 0, sizeof( region));
+   region.bufferOffset      = 0;
+   region.bufferRowLength   = 0;
+   region.bufferImageHeight = 0;
+   region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+   region.imageSubresource.mipLevel       = 0;
+   region.imageSubresource.baseArrayLayer = 0;
+   region.imageSubresource.layerCount     = 1;
+   region.imageOffset.x = x;
+   region.imageOffset.y = y;
+   region.imageOffset.z = 0;
+   region.imageExtent.width  = width;
+   region.imageExtent.height = height;
+   region.imageExtent.depth  = 1;
+   
+   vkCmdCopyImageToBuffer( cmdBuf, vkfb->colorImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                           stagingBuffer, 1, &region);
+   
+   // Transition back
+   barrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+   barrier.newLayout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+   barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+   barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   
+   vkCmdPipelineBarrier( cmdBuf, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         0, 0, NULL, 0, NULL, 1, &barrier);
+   
+   vkEndCommandBuffer( cmdBuf);
+   
+   // Submit and wait using context's queue
+   memset( &submitInfo, 0, sizeof( submitInfo));
+   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers    = &cmdBuf;
+   
+   vkQueueSubmit( vk->queue, 1, &submitInfo, VK_NULL_HANDLE);
+   vkQueueWaitIdle( vk->queue);
+   
+   // Map and copy
+   if( vkMapMemory( device, stagingMemory, 0, VK_WHOLE_SIZE, 0, &mapped) == VK_SUCCESS)
+   {
+      src = (unsigned char *) mapped;
+      dst = (unsigned char *) data;
+      
+      for( row = 0; row < height; row++)
+      {
+         memcpy( dst, src, width * 4);
+         src += width * 4;
+         dst += width * 4;
+      }
+      
+      vkUnmapMemory( device, stagingMemory);
+   }
+   
+   // Cleanup
+   vkFreeCommandBuffers( device, vk->utilityCommandPool, 1, &cmdBuf);
+   vkFreeMemory( device, stagingMemory, allocator);
+   vkDestroyBuffer( device, stagingBuffer, allocator);
 }
 
 #endif

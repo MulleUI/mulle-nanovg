@@ -33,6 +33,7 @@ typedef struct VKNVGCreateInfo {
   VkCommandBuffer *cmdBuffer;
   uint32_t swapchainImageCount;
   uint32_t *currentFrame;
+  uint32_t queueFamilyIndex;  // For creating utility command pool
   const VkAllocationCallbacks *allocator; // Allocator for vulkan. can be null
   VkNvgExt ext;
 } VKNVGCreateInfo;
@@ -214,6 +215,7 @@ typedef struct VKNVGcontext {
   VkShaderModule fillFragShader;
   VkShaderModule fillVertShader;
   VkQueue queue;
+  VkCommandPool utilityCommandPool;  // For utility operations like readpixels
 
   VkNvgExt ext;
   
@@ -1357,6 +1359,20 @@ static int vknvg_renderCreate(void *uptr) {
   VkPhysicalDeviceFeatures supportedFeatures;
   vkGetPhysicalDeviceFeatures(vk->createInfo.gpu, &supportedFeatures);
 
+  // Create utility command pool for operations like readpixels
+#ifdef __cplusplus
+  VkCommandPoolCreateInfo poolInfo = {};
+#else
+  VkCommandPoolCreateInfo poolInfo = {0};
+#endif
+  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  poolInfo.queueFamilyIndex = vk->createInfo.queueFamilyIndex;
+  poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  
+  if (vkCreateCommandPool(device, &poolInfo, allocator, &vk->utilityCommandPool) != VK_SUCCESS) {
+    return 0;
+  }
+
   return 1;
 }
 
@@ -1911,6 +1927,10 @@ static void vknvg_renderDelete(void *uptr) {
 
   vkDestroyShaderModule(device, vk->fillVertShader, allocator);
   vkDestroyShaderModule(device, vk->fillFragShader, allocator);
+
+  if (vk->utilityCommandPool != VK_NULL_HANDLE) {
+    vkDestroyCommandPool(device, vk->utilityCommandPool, allocator);
+  }
 
   vkDestroyDescriptorPool(device, vk->descPool, allocator);
   vkDestroyDescriptorSetLayout(device, vk->descLayout[0], allocator);

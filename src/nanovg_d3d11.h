@@ -47,7 +47,7 @@ void d3dnvgClearWithColor(struct NVGcontext* ctx, NVGcolor color);
 // Optional utilities
 void d3dnvgCopyImage(struct NVGcontext* ctx, int imgDest, int imgSrc);
 void d3dnvgWriteImage(struct NVGcontext* ctx, int imgDest, void* data);
-void d3dnvgReadPixels(struct NVGcontext* ctx, int image, int x, int y, int width, int height, void* data);
+void d3dnvgReadPixels(struct NVGcontext* ctx, NVGframebuffer fb, int x, int y, int width, int height, void* data);
 
 // Internal texture access (for FBO demos)
 struct D3DNVGtexture;

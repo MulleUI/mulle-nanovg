@@ -82,18 +82,19 @@ int main(void)
 
    printf( "Reading pixels...\n");
    pixels = (unsigned char*)malloc( fbSize * fbSize * 4);
-   glReadPixels( 0, 0, fbSize, fbSize, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+   glnvgReadPixels( vg, fb, 0, 0, fbSize, fbSize, pixels);
 
    nvgluBindFramebuffer( NULL);
 
-   printf( "Saving to output.png...\n");
-   stbi_write_png( "output.png", fbSize, fbSize, 4, pixels, fbSize * 4);
+   printf( "Saving to gl-output.png...\n");
+   // Use negative stride to flip image (OpenGL reads bottom-to-top, PNG is top-to-bottom)
+   stbi_write_png( "gl-output.png", fbSize, fbSize, 4, pixels + (fbSize - 1) * fbSize * 4, -fbSize * 4);
 
    free( pixels);
    nvgluDeleteFramebuffer( fb);
    nvgDeleteGLES3( vg);
    glfwTerminate();
    
-   printf( "Done! Check output.png\n");
+   printf( "Done! Check gl-output.png\n");
    return( 0);
 }
