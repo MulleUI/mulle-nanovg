@@ -185,6 +185,11 @@ struct D3DNVGcontext {
 	ID3D11DepthStencilState* pDepthStencilDrawAA;
 	ID3D11DepthStencilState* pDepthStencilFill;
 	ID3D11DepthStencilState* pDepthStencilDefault;
+	
+	// Framebuffer support
+	int                      currentFramebuffer;
+	NVGcolor                 clearColor;
+	int                      pendingClear;
 };
 
 static int D3Dnvg__maxi(int a, int b) { return a > b ? a : b; }
@@ -218,7 +223,7 @@ static struct D3DNVGtexture* D3Dnvg__allocTexture(struct D3DNVGcontext* D3D)
 	return tex;
 }
 
-static struct D3DNVGtexture* D3Dnvg__findTexture(struct D3DNVGcontext* D3D, int id)
+struct D3DNVGtexture* D3Dnvg__findTexture(struct D3DNVGcontext* D3D, int id)
 {
 	int i;
 	for (i = 0; i < D3D->ntextures; i++)
@@ -1536,104 +1541,58 @@ void nvgDeleteD3D11(struct NVGcontext* ctx)
 
 // Framebuffer support (extracted from nanovg_compat)
 
-// Device struct for framebuffer management
-typedef struct D3DNVGdevice
-{
-    ID3D11Device*        pDevice;
-    ID3D11DeviceContext* pDeviceContext;
-    IDXGISwapChain*      pSwapChain;
-    DXGI_SWAP_CHAIN_DESC swapDesc;
-    ID3D11RenderTargetView* pMainView;
-    ID3D11Texture2D*        pDepthStencil;
-    ID3D11DepthStencilView* pDepthStencilView;
-    ID3D11RenderTargetView* pTargetView;
-} D3DNVGdevice;
-
-static D3DNVGdevice* d3dnvgGetDevice(struct NVGcontext* ctx)
-{
-    struct NVGparams* params = nvgInternalParams(ctx);
-    struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)params->userPtr;
-    return (D3DNVGdevice*)D3D->userPtr;
-}
-
 void d3dnvgBindFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb)
 {
-    D3DNVGdevice* device = d3dnvgGetDevice(ctx);
-    D3D11_VIEWPORT viewport;
-    int texId = (int)(intptr_t)fb;
-    
-    ZeroMemory(&viewport, sizeof(viewport));
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-
-    if (texId == 0)
-    {
-        viewport.Width      = device->swapDesc.BufferDesc.Width;
-        viewport.Height     = device->swapDesc.BufferDesc.Height;
-        device->pTargetView = device->pMainView;
-    }
-    else
-    {
-        struct NVGparams* params = nvgInternalParams(ctx);
-        struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)params->userPtr;
-        struct D3DNVGtexture* tex = D3Dnvg__findTexture(D3D, texId);
-        viewport.Width = tex->width;
-        viewport.Height = tex->height;
-        device->pTargetView = tex->renderTargetView;
-    }
-
-    D3D_API_3(device->pDeviceContext, OMSetRenderTargets, 1, &device->pTargetView, device->pDepthStencilView);
-    D3D_API_2(device->pDeviceContext, RSSetViewports, 1, &viewport);
+   struct NVGparams         *params;
+   struct D3DNVGcontext     *D3D;
+   int                      texId;
+   
+   params = nvgInternalParams( ctx);
+   D3D    = (struct D3DNVGcontext*)params->userPtr;
+   texId  = (int)(intptr_t)fb;
+   
+   D3D->currentFramebuffer = texId;
 }
 
 void d3dnvgClearWithColor(struct NVGcontext* ctx, NVGcolor color)
 {
-    // Clear both color and stencil buffers
-    // This is consistent across all backends (GL, Metal, D3D11)
-    // Depth is not cleared as it's not used in 2D rendering
-    D3DNVGdevice* device = d3dnvgGetDevice(ctx);
-    float alpha = color.a;
-    float clearColor[4] = {
-        color.r * alpha,
-        color.g * alpha,
-        color.b * alpha,
-        color.a
-    };
-    D3D_API_2(device->pDeviceContext, ClearRenderTargetView, device->pTargetView, clearColor);
-    D3D_API_4(device->pDeviceContext, ClearDepthStencilView, device->pDepthStencilView, 
-              D3D11_CLEAR_STENCIL, 1.0f, 0);
+   struct NVGparams         *params;
+   struct D3DNVGcontext     *D3D;
+   
+   params = nvgInternalParams( ctx);
+   D3D    = (struct D3DNVGcontext*)params->userPtr;
+   
+   D3D->clearColor = color;
+   D3D->pendingClear = 1;
 }
 
 NVGframebuffer d3dnvgCreateFramebuffer(struct NVGcontext* ctx, int w, int h, int flags)
 {
-    struct NVGparams* params = nvgInternalParams(ctx);
-    struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)params->userPtr;
-    D3DNVGdevice* device = (D3DNVGdevice*)D3D->userPtr;
-
-    int texId = nvgCreateImageRGBA(ctx, w, h, flags | NVG_IMAGE_RENDER_TARGET, NULL);
-    struct D3DNVGtexture* tex = D3Dnvg__findTexture(D3D, texId);
-
-    D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
-    ZeroMemory(&renderDesc, sizeof(renderDesc));
-    renderDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    renderDesc.ViewDimension =
-        (device->swapDesc.SampleDesc.Count > 1) ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
-    renderDesc.Texture2D.MipSlice = 0;
-
-    HRESULT hr = device->pDevice->lpVtbl->CreateRenderTargetView(
-        device->pDevice,
-        (struct ID3D11Resource*)tex->tex,
-        &renderDesc,
-        &tex->renderTargetView);
-    
-    if (FAILED(hr))
-    {
-        return (NVGframebuffer)0;
-    }
-
-    return (NVGframebuffer)(intptr_t)texId;
+   D3D11_RENDER_TARGET_VIEW_DESC   renderDesc;
+   HRESULT                         hr;
+   struct D3DNVGcontext            *D3D;
+   struct D3DNVGtexture            *tex;
+   struct NVGparams                *params;
+   int                             texId;
+   
+   params = nvgInternalParams( ctx);
+   D3D    = (struct D3DNVGcontext*)params->userPtr;
+   texId  = nvgCreateImageRGBA( ctx, w, h, flags | NVG_IMAGE_RENDER_TARGET, NULL);
+   tex    = D3Dnvg__findTexture( D3D, texId);
+   
+   ZeroMemory( &renderDesc, sizeof( renderDesc));
+   renderDesc.Format        = DXGI_FORMAT_R8G8B8A8_UNORM;
+   renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+   renderDesc.Texture2D.MipSlice = 0;
+   
+   hr = D3D->pDevice->lpVtbl->CreateRenderTargetView( D3D->pDevice,
+                                                       (struct ID3D11Resource*)tex->tex,
+                                                       &renderDesc,
+                                                       &tex->renderTargetView);
+   if( FAILED( hr))
+      return( (NVGframebuffer)0);
+   
+   return( (NVGframebuffer)(intptr_t)texId);
 }
 
 void d3dnvgDeleteFramebuffer(struct NVGcontext* ctx, NVGframebuffer fb)

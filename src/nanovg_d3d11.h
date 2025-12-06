@@ -49,6 +49,11 @@ void d3dnvgCopyImage(struct NVGcontext* ctx, int imgDest, int imgSrc);
 void d3dnvgWriteImage(struct NVGcontext* ctx, int imgDest, void* data);
 void d3dnvgReadPixels(struct NVGcontext* ctx, int image, int x, int y, int width, int height, void* data);
 
+// Internal texture access (for FBO demos)
+struct D3DNVGtexture;
+struct D3DNVGcontext;
+struct D3DNVGtexture* D3Dnvg__findTexture(struct D3DNVGcontext* D3D, int id);
+
 // These are additional flags on top of NVGimageFlags.
 enum NVGimageFlagsD3D11 {
 	NVG_IMAGE_NODELETE          = 1<<16, // Do not delete texture object.
