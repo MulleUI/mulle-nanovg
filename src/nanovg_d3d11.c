@@ -1627,24 +1627,67 @@ void d3dnvgWriteImage(struct NVGcontext* ctx, int image, void* data)
 
 void d3dnvgReadPixels(struct NVGcontext* ctx, int image, int x, int y, int width, int height, void* data)
 {
-    struct NVGparams* params = nvgInternalParams(ctx);
-    struct D3DNVGcontext* D3D = (struct D3DNVGcontext*)params->userPtr;
-    struct D3DNVGtexture* tex = D3Dnvg__findTexture(D3D, image);
-
-    D3D11_MAPPED_SUBRESOURCE resource;
-    D3D_API_5(D3D->pDeviceContext, Map, (ID3D11Resource*)tex->tex, 0, D3D11_MAP_READ, 0, &resource);
-    
-    unsigned char* src = (unsigned char*)resource.pData + (y * resource.RowPitch) + (x * 4);
-    unsigned char* dst = (unsigned char*)data;
-    
-    for (int row = 0; row < height; row++)
-    {
-        memcpy(dst, src, width * 4);
-        src += resource.RowPitch;
-        dst += width * 4;
-    }
-    
-    D3D_API_2(D3D->pDeviceContext, Unmap, (ID3D11Resource*)tex->tex, 0);
+   D3D11_MAPPED_SUBRESOURCE   resource;
+   D3D11_TEXTURE2D_DESC       desc;
+   D3D11_TEXTURE2D_DESC       stagingDesc;
+   HRESULT                    hr;
+   ID3D11Texture2D            *stagingTex;
+   struct D3DNVGcontext       *D3D;
+   struct D3DNVGtexture       *tex;
+   struct NVGparams           *params;
+   unsigned char              *dst;
+   unsigned char              *src;
+   int                        row;
+   
+   params = nvgInternalParams( ctx);
+   D3D    = (struct D3DNVGcontext*)params->userPtr;
+   tex    = D3Dnvg__findTexture( D3D, image);
+   
+   if( !tex || !tex->tex)
+      return;
+   
+   // Get texture description
+   tex->tex->lpVtbl->GetDesc( tex->tex, &desc);
+   
+   // Create staging texture for CPU readback
+   memset( &stagingDesc, 0, sizeof( stagingDesc));
+   stagingDesc.Width              = desc.Width;
+   stagingDesc.Height             = desc.Height;
+   stagingDesc.MipLevels          = 1;
+   stagingDesc.ArraySize          = 1;
+   stagingDesc.Format             = desc.Format;
+   stagingDesc.SampleDesc.Count   = 1;
+   stagingDesc.Usage              = D3D11_USAGE_STAGING;
+   stagingDesc.CPUAccessFlags     = D3D11_CPU_ACCESS_READ;
+   
+   hr = D3D->pDevice->lpVtbl->CreateTexture2D( D3D->pDevice, &stagingDesc, NULL, &stagingTex);
+   if( FAILED( hr))
+      return;
+   
+   // Copy render target to staging texture
+   D3D->pDeviceContext->lpVtbl->CopyResource( D3D->pDeviceContext, (ID3D11Resource*)stagingTex, (ID3D11Resource*)tex->tex);
+   
+   // Map staging texture for reading
+   hr = D3D->pDeviceContext->lpVtbl->Map( D3D->pDeviceContext, (ID3D11Resource*)stagingTex, 0, D3D11_MAP_READ, 0, &resource);
+   if( FAILED( hr))
+   {
+      stagingTex->lpVtbl->Release( stagingTex);
+      return;
+   }
+   
+   // Copy requested region
+   src = (unsigned char*)resource.pData + (y * resource.RowPitch) + (x * 4);
+   dst = (unsigned char*)data;
+   
+   for( row = 0; row < height; row++)
+   {
+      memcpy( dst, src, width * 4);
+      src += resource.RowPitch;
+      dst += width * 4;
+   }
+   
+   D3D->pDeviceContext->lpVtbl->Unmap( D3D->pDeviceContext, (ID3D11Resource*)stagingTex, 0);
+   stagingTex->lpVtbl->Release( stagingTex);
 }
 
 #endif // _WIN32
