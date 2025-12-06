@@ -446,6 +446,11 @@ int main(void)
    nvgDeleteVk( vgFbo);  // Delete offscreen context first
    vknvgDeleteFramebuffer( vg, fbo);
    nvgDeleteVk( vg);
+   
+   // Destroy FBO-specific Vulkan resources
+   vkDestroySemaphore( device->device, fboCompleteSemaphore, NULL);
+   vkDestroyCommandPool( device->device, fboPool, NULL);  // Also frees fboCmd
+   
    destroyFrameBuffers( device, &fb, queue);
    free( cmdBuffers);
    destroyVulkanDevice( device);

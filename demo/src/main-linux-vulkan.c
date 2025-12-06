@@ -323,6 +323,7 @@ int main( int argc, char** argv)
    nvgDeleteVk( vg);
    
    destroyFrameBuffers( device, &fb, executionQueue);
+   free( cmdBuffer);  // Free command buffer array
    destroyVulkanDevice( device);
    vkDestroySurfaceKHR( instance, surface, NULL);
    vkDestroyInstance( instance, NULL);

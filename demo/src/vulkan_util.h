@@ -1,4 +1,57 @@
 
+// vulkan_util.h - Vulkan helper utilities for NanoVG demo
+//
+// OVERVIEW FOR BEGINNERS:
+// This file provides helper functions to set up Vulkan for rendering.
+// It handles the boilerplate code that's common to most Vulkan applications.
+//
+// KEY STRUCTURES:
+//
+// 1. VulkanDevice - Represents your connection to the GPU
+//    - gpu: The physical GPU hardware
+//    - device: Your application's logical interface to the GPU
+//    - commandPool: Memory pool for allocating command buffers
+//    - graphicsQueueFamilyIndex: Which queue family supports graphics
+//
+// 2. FrameBuffers - Manages the swapchain and rendering targets
+//    - swap_chain: Queue of images for double/triple buffering
+//    - swap_chain_buffers: The actual images to render into
+//    - framebuffers: Attachments (color + depth) for each image
+//    - render_pass: Describes how rendering operations work
+//    - depth: Depth/stencil buffer (used by NanoVG for clipping)
+//    - Semaphores: Synchronize GPU operations (present/render complete)
+//    - Fences: Synchronize CPU with GPU (wait for frame completion)
+//
+// 3. SwapchainBuffers - A single image in the swapchain
+//    - image: The VkImage to render into
+//    - view: VkImageView for accessing the image
+//
+// 4. DepthBuffer - Depth and stencil attachment
+//    - format: Pixel format (e.g., D24_UNORM_S8_UINT = 24-bit depth + 8-bit stencil)
+//    - image: The VkImage for depth/stencil data
+//    - mem: GPU memory backing the image
+//    - view: VkImageView for accessing the image
+//
+// KEY FUNCTIONS:
+//
+// - createVkInstance(): Creates Vulkan instance (connection to Vulkan library)
+// - createVulkanDevice(): Creates logical device and queries extensions
+// - createFrameBuffers(): Creates swapchain, render pass, and framebuffers
+// - createCmdBuffer(): Allocates command buffers for recording GPU commands
+// - createDepthBuffer(): Creates depth/stencil buffer for 3D rendering and clipping
+// - createRenderPass(): Defines how color and depth attachments are used
+//
+// VULKAN RENDERING FLOW:
+// 1. Acquire next swapchain image (vkAcquireNextImageKHR)
+// 2. Begin command buffer recording (vkBeginCommandBuffer)
+// 3. Begin render pass (vkCmdBeginRenderPass) - clears attachments
+// 4. Set viewport and scissor (vkCmdSetViewport, vkCmdSetScissor)
+// 5. Record drawing commands (NanoVG does this via nvgBeginFrame/nvgEndFrame)
+// 6. End render pass (vkCmdEndRenderPass)
+// 7. End command buffer (vkEndCommandBuffer)
+// 8. Submit to GPU queue (vkQueueSubmit)
+// 9. Present image to screen (vkQueuePresentKHR)
+
 #pragma once
 
 #ifdef __APPLE__
