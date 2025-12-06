@@ -12,45 +12,47 @@ if( MULLE_TRACE_INCLUDE)
 endif()
 
 #
-# Generated from sourcetree: 722DDE24-5187-4D69-93E9-7964F3A8DB14;m;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;
+# Generated from sourcetree: 722DDE24-5187-4D69-93E9-7964F3A8DB14;m;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update,only-platform-linux;
 # Disable with : `mulle-sourcetree mark m `
 # Disable for this platform: `mulle-sourcetree mark m no-cmake-platform-${MULLE_UNAME}`
 # Disable for a sdk: `mulle-sourcetree mark m no-cmake-sdk-<name>`
 #
-if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
-   list( APPEND OS_SPECIFIC_LIBRARIES "m")
-else()
-   if( NOT M_LIBRARY)
-      find_library( M_LIBRARY NAMES
-         m
-      )
-      message( STATUS "M_LIBRARY is ${M_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( M_LIBRARY)
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+      list( APPEND OS_SPECIFIC_LIBRARIES "m")
+   else()
+      if( NOT M_LIBRARY)
+         find_library( M_LIBRARY NAMES
+            m
+         )
+         message( STATUS "M_LIBRARY is ${M_LIBRARY}")
          #
-         # Add M_LIBRARY to OS_SPECIFIC_LIBRARIES list.
-         # Disable with: `mulle-sourcetree mark m no-cmake-add`
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${M_LIBRARY})
-         # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark m no-require-link`
-         message( SEND_ERROR "M_LIBRARY was not found in m")
+         if( M_LIBRARY)
+            #
+            # Add M_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark m no-cmake-add`
+            #
+            list( APPEND OS_SPECIFIC_LIBRARIES ${M_LIBRARY})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark m no-require-link`
+            message( SEND_ERROR "M_LIBRARY was not found in m")
+         endif()
       endif()
    endif()
 endif()
 
 
 #
-# Generated from sourcetree: 6C07DED7-45E3-48F5-9B68-9BA8703E5300;GLESv2;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;
+# Generated from sourcetree: 6C07DED7-45E3-48F5-9B68-9BA8703E5300;GLESv2;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update,only-platform-linux;
 # Disable with : `mulle-sourcetree mark GLESv2 `
 # Disable for this platform: `mulle-sourcetree mark GLESv2 no-cmake-platform-${MULLE_UNAME}`
 # Disable for a sdk: `mulle-sourcetree mark GLESv2 no-cmake-sdk-<name>`
 #
-if( NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
       list( APPEND OS_SPECIFIC_LIBRARIES "GLESv2")
    else()
@@ -80,12 +82,12 @@ endif()
 
 
 #
-# Generated from sourcetree: 7D71E400-2706-4A14-A17D-6749EC3F77B8;vulkan;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update;
+# Generated from sourcetree: 7D71E400-2706-4A14-A17D-6749EC3F77B8;vulkan;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-platform-darwin,no-share,no-update,only-platform-linux;
 # Disable with : `mulle-sourcetree mark vulkan `
 # Disable for this platform: `mulle-sourcetree mark vulkan no-cmake-platform-${MULLE_UNAME}`
 # Disable for a sdk: `mulle-sourcetree mark vulkan no-cmake-sdk-<name>`
 #
-if( NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
       list( APPEND OS_SPECIFIC_LIBRARIES "vulkan")
    else()
@@ -108,6 +110,76 @@ if( NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
          else()
             # Disable with: `mulle-sourcetree mark vulkan no-require-link`
             message( SEND_ERROR "VULKAN_LIBRARY was not found in vulkan")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 663143C7-8A99-4EE4-9B52-A44081B496D6;d3d11;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update,only-platform-windows;
+# Disable with : `mulle-sourcetree mark d3d11 `
+# Disable for this platform: `mulle-sourcetree mark d3d11 no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark d3d11 no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+   if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+      list( APPEND OS_SPECIFIC_LIBRARIES "d3d11")
+   else()
+      if( NOT D3D11_LIBRARY)
+         find_library( D3D11_LIBRARY NAMES
+            d3d11
+         )
+         message( STATUS "D3D11_LIBRARY is ${D3D11_LIBRARY}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( D3D11_LIBRARY)
+            #
+            # Add D3D11_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark d3d11 no-cmake-add`
+            #
+            list( APPEND OS_SPECIFIC_LIBRARIES ${D3D11_LIBRARY})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark d3d11 no-require-link`
+            message( SEND_ERROR "D3D11_LIBRARY was not found in d3d11")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 7859CD7D-881D-4D06-AC6B-60132D3C55D8;dxgi;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update,only-platform-windows;
+# Disable with : `mulle-sourcetree mark dxgi `
+# Disable for this platform: `mulle-sourcetree mark dxgi no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark dxgi no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+   if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+      list( APPEND OS_SPECIFIC_LIBRARIES "dxgi")
+   else()
+      if( NOT DXGI_LIBRARY)
+         find_library( DXGI_LIBRARY NAMES
+            dxgi
+         )
+         message( STATUS "DXGI_LIBRARY is ${DXGI_LIBRARY}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( DXGI_LIBRARY)
+            #
+            # Add DXGI_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark dxgi no-cmake-add`
+            #
+            list( APPEND OS_SPECIFIC_LIBRARIES ${DXGI_LIBRARY})
+            # intentionally left blank
+         else()
+            # Disable with: `mulle-sourcetree mark dxgi no-require-link`
+            message( SEND_ERROR "DXGI_LIBRARY was not found in dxgi")
          endif()
       endif()
    endif()

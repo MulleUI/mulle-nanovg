@@ -73,6 +73,13 @@ static int initD3D11( GLFWwindow *window, D3D11Context *d3d)
       return( -1);
    }
    
+   // Set viewport (CRITICAL for rendering!)
+   D3D11_VIEWPORT viewport = { 0 };
+   viewport.Width = (float)d3d->width;
+   viewport.Height = (float)d3d->height;
+   viewport.MaxDepth = 1.0f;
+   d3d->context->lpVtbl->RSSetViewports( d3d->context, 1, &viewport);
+   
    return( 0);
 }
 
@@ -137,27 +144,29 @@ int main( void)
    printf( "NanoVG context created\n");
    printf( "Starting render loop...\n");
    
-   // Clear color: red
+   // Clear color: red background
    clearColor[0] = 1.0f;
    clearColor[1] = 0.0f;
    clearColor[2] = 0.0f;
    clearColor[3] = 1.0f;
    
-   while( !glfwWindowShouldClose( window) && frameCount < 60)
+   double startTime = glfwGetTime();
+   while( !glfwWindowShouldClose( window) && (glfwGetTime() - startTime) < 5.0)
    {
       // Clear to red
       d3d.context->lpVtbl->OMSetRenderTargets( d3d.context, 1, &d3d.renderTarget, NULL);
       d3d.context->lpVtbl->ClearRenderTargetView( d3d.context, d3d.renderTarget, clearColor);
       
-      // Draw green square with NanoVG
+      // Draw green rectangle with NanoVG
       nvgBeginFrame( vg, d3d.width, d3d.height, 1.0f);
-      
       nvgBeginPath( vg);
       nvgRect( vg, 100, 100, 200, 200);
       nvgFillColor( vg, nvgRGBA( 0, 255, 0, 255));
       nvgFill( vg);
-      
       nvgEndFrame( vg);
+      
+      if( frameCount == 0)
+         printf( "First frame: red background + green NanoVG rect\n");
       
       // Present
       d3d.swapchain->lpVtbl->Present( d3d.swapchain, 1, 0);

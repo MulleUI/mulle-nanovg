@@ -22,3 +22,15 @@ export MULLE_MATCH_PATH="${MULLE_MATCH_PATH}:../src"
 export MULLE_MATCH_FILENAMES="config*:*.h:*.inc:*.c:*.m:CMakeLists.txt:*.cmake"
 
 
+#
+#
+#
+export MULLE_CRAFT_PLATFORMS="windows"
+
+
+#
+#
+#
+export MULLE_CRAFT_TOOLCHAIN__WINDOWS="toolchain-llvm-mingw-clang"
+
+
