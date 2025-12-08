@@ -22,6 +22,10 @@
 #include <stdint.h>
 #include <assert.h>
 
+// mulle-nanovg only "supports" freetype. -> stb truetype is not tested
+#if ! defined( FONS_USE_FREETYPE) && ! defined( FONS_USE_STB_TRUETYPE)
+# define FONS_USE_FREETYPE
+#endif
 
 #define FONS_INVALID -1
 

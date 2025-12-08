@@ -23,6 +23,8 @@
 
 #include "nanovg_mtl.h"
 
+#ifdef __APPLE__
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -1176,11 +1178,11 @@ enum MNVGTarget mnvgTarget() {
   return 1;
 }
 
-- (int)renderCreateTextureWithType:(int)type
-                             width:(int)width
-                            height:(int)height
-                        imageFlags:(int)imageFlags
-                              data:(const unsigned char*)data {
+- (int) renderCreateTextureWithType:(int)type
+                              width:(int)width
+                             height:(int)height
+                         imageFlags:(int)imageFlags
+                               data:(const unsigned char*)data {
   MNVGtexture* tex = [self allocTexture];
 
   if (tex == nil) return 0;
@@ -1285,7 +1287,7 @@ enum MNVGTarget mnvgTarget() {
   return tex->id;
 }
 
-- (void)renderDelete {
+- (void) renderDelete {
   for (MNVGbuffers* buffers in _cbuffers) {
     buffers.commandBuffer = nil;
     buffers.viewSizeBuffer = nil;
@@ -1323,7 +1325,7 @@ enum MNVGTarget mnvgTarget() {
   _metalLayer = nil;
 }
 
-- (int)renderDeleteTexture:(int)image {
+- (int) renderDeleteTexture:(int)image {
   for (MNVGtexture* texture in _textures) {
     if (texture->id == image) {
       if (texture->tex != nil &&
@@ -1339,13 +1341,13 @@ enum MNVGTarget mnvgTarget() {
   return 0;
 }
 
-- (void)renderFillWithPaint:(NVGpaint*)paint
-         compositeOperation:(NVGcompositeOperationState)compositeOperation
-                    scissor:(NVGscissor*)scissor
-                     fringe:(float)fringe
-                     bounds:(const float*)bounds
-                      paths:(const NVGpath*)paths
-                     npaths:(int)npaths {
+- (void) renderFillWithPaint:(NVGpaint*)paint
+          compositeOperation:(NVGcompositeOperationState)compositeOperation
+                     scissor:(NVGscissor*)scissor
+                      fringe:(float)fringe
+                      bounds:(const float*)bounds
+                       paths:(const NVGpath*)paths
+                      npaths:(int)npaths {
   MNVGcall* call = [self allocCall];
   NVGvertex* quad;
 
@@ -1431,7 +1433,7 @@ error:
   if (_buffers.ncalls > 0) _buffers.ncalls--;
 }
 
-- (void)renderFlush {
+- (void) renderFlush {
   // Cancelled if the drawable is invisible.
   if (_viewPortSize.x == 0 || _viewPortSize.y == 0) {
     [self renderCancel];
@@ -1518,9 +1520,9 @@ error:
   }
 }
 
-- (int)renderGetTextureSizeForImage:(int)image
-                              width:(int*)width
-                             height:(int*)height {
+- (int) renderGetTextureSizeForImage:(int)image
+                               width:(int*)width
+                              height:(int*)height {
   MNVGtexture* tex = [self findTexture:image];
   if (tex == nil) return 0;
   *width = (int)tex->tex.width;
@@ -1528,13 +1530,13 @@ error:
   return 1;
 }
 
-- (void)renderStrokeWithPaint:(NVGpaint*)paint
-           compositeOperation:(NVGcompositeOperationState)compositeOperation
-                      scissor:(NVGscissor*)scissor
-                       fringe:(float)fringe
-                  strokeWidth:(float)strokeWidth
-                        paths:(const NVGpath*)paths
-                       npaths:(int)npaths {
+- (void) renderStrokeWithPaint:(NVGpaint*)paint
+            compositeOperation:(NVGcompositeOperationState)compositeOperation
+                       scissor:(NVGscissor*)scissor
+                        fringe:(float)fringe
+                   strokeWidth:(float)strokeWidth
+                         paths:(const NVGpath*)paths
+                        npaths:(int)npaths {
   MNVGcall* call = [self allocCall];
 
   if (call == NULL) return;
@@ -1603,12 +1605,12 @@ error:
   if (_buffers.ncalls > 0) _buffers.ncalls--;
 }
 
-- (void)renderTrianglesWithPaint:(NVGpaint*) paint
-              compositeOperation:(NVGcompositeOperationState)compositeOperation
-                         scissor:(NVGscissor*)scissor
-                           verts:(const NVGvertex*)verts
-                          nverts:(int)nverts
-                          fringe:(float)fringe {
+- (void) renderTrianglesWithPaint:(NVGpaint*) paint
+               compositeOperation:(NVGcompositeOperationState)compositeOperation
+                          scissor:(NVGscissor*)scissor
+                            verts:(const NVGvertex*)verts
+                           nverts:(int)nverts
+                           fringe:(float)fringe {
   MNVGcall* call = [self allocCall];
   MNVGfragUniforms* frag;
 
@@ -1861,3 +1863,5 @@ error:
 
 @implementation MNVGtexture
 @end
+
+#endif

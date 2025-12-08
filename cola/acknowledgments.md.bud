@@ -1,0 +1,9 @@
+## Author and Licensing Information
+
+| Component                                          | Fork used                                              | Authors                                                                    | License      |
+|----------------------------------------------------|--------------------------------------------------------|----------------------------------------------------------------------------|--------------|
+| [mulle-nanovg](//github.com/MulleUI/mulle-nanovg)  | -                                                      | [Nat!](mailto:nat@mulle-kybernetik.com) (nat@mulle-kybernetik.com)         | BSD-3-Clause |
+| [nanovg](//github.com/memononen/nanovg)            | [MulleUI/nanovg](//github.com/MulleUI/nanovg)          | [Nat!](mailto:nat@mulle-kybernetik.com) (nat@mulle-kybernetik.com)         | Zlib         |
+| [nanovg_dx11](//github.com/cmaughan/nanovg)        | [Tremus/nanovg_dx11](//github.com/Tremus/nanovg_dx11)  | [Chris Maughan](https://twitter.com/cmaughan)                              | Zlib         |
+| [nanovg_vulkan](//github.com/danilw/nanovg_vulkan) | [SubiyaCryolite/nanovg_vulkan](//github.com/SubiyaCryolite/nanovg_vulkan) | [Danil](mailto:s48gs.w@gmail.com) · [Ifunga Ndana](mailto:ifungandana@gmail.com) | Zlib |
+| [MetalNanoVG](//github.com/ollix/MetalNanoVG)      | [Tremus/MetalNanoVG](//github.com/Tremus/MetalNanoVG)  | [Olli Wang](mailto:olliwang@ollix.com) (ollix)                             | MIT          |

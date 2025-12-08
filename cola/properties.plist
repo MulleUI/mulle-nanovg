@@ -1,0 +1,48 @@
+{
+   project =
+   {
+      description="🧿 A better NanoVG with OpenGL, Metal, Vulkan, DirectX 11 backends.";
+      domain="github";
+      language="c";
+      dialect="c";
+      name="mulle-nanovg";
+      user="MulleUI";
+      repo="mulle-nanovg";
+      homepage="https://github.com/MulleUI/mulle-nanovg";
+      license="UNLICENSED";
+   };
+   dependencies =
+   (
+      {
+         domain="github";
+         name="harfbuzz";
+         repo="harfbuzz";
+         url="https://github.com/harfbuzz/harfbuzz";
+         user="harfbuzz";
+      },
+      {
+         domain="github";
+         name="freetype";
+         repo="freetype";
+         url="https://github.com/MulleUI/freetype";
+         user="MulleUI";
+      }
+   );
+   embedded =
+   (
+      {
+         domain="github";
+         name="src/stb_truetype.h";
+         repo="stb";
+         url="https://raw.githubusercontent.com/nothings/stb";
+         user="nothings";
+      },
+      {
+         domain="github";
+         name="src/stb_image.h";
+         repo="stb";
+         url="https://raw.githubusercontent.com/nothings/stb";
+         user="nothings";
+      }
+   );
+}

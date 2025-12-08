@@ -1,0 +1,14 @@
+- Plus additional API
+- Plus additional code to bring all backends feature-wise up to par.
+- Plus better debugging support.
+- Plus bug fixes.
+
+This project combines:
+
+- **nanovg** - Antialiased 2D vector drawing library for OpenGL (custom fork with trace support)
+- **MetalNanoVG** - Metal backend for macOS/iOS
+- **nanovg_dx11** - DirectX 11 backend for Windows
+- **nanovg_vulkan** - Vulkan backend
+
+into a single project.
+

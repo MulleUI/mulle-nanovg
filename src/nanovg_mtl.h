@@ -24,6 +24,8 @@
 #ifndef NANOVG_MTL_H_
 #define NANOVG_MTL_H_
 
+#ifdef __APPLE__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -110,6 +112,8 @@ enum MNVGTarget mnvgTarget();
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif  // NANOVG_MTL_H_

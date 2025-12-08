@@ -14,6 +14,21 @@
 #ifndef _mulle_nanovg_include_h__
 #define _mulle_nanovg_include_h__
 
-/* no headers */
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove harfbuzz`
+// (Use 4F37D84F-3316-403F-9828-E951D58F9C1C instead of harfbuzz, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark harfbuzz no-header`
+//    rename              : `mulle-sde dependency|library set harfbuzz include whatever.h`
+//    reorder             : `mulle-sde dependency move harfbuzz <up|down>`
+//    toggle #include: `mulle-sde dependency mark harfbuzz [no-]import`
+//    toggle public       : `mulle-sde dependency mark harfbuzz [no-]public`
+//    toggle optional     : `mulle-sde dependency mark harfbuzz [no-]require`
+//    remove for platform : `mulle-sde dependency mark harfbuzz no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+# if ! defined( __linux__)
+# include <harfbuzz/harfbuzz.h>   // harfbuzz
+#endif
 
 #endif

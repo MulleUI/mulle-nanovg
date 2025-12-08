@@ -1,0 +1,5 @@
+## Links
+
+Uses [freetype](//freetype.org) for font rendering.
+Uses [stb_image](//nothings.org) for image loading.
+Demos use [glfw3](//glfw3.org) for graphic library loading and windows.

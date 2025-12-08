@@ -11,4 +11,138 @@ if( MULLE_TRACE_INCLUDE)
    message( STATUS "# Include \"${CMAKE_CURRENT_LIST_FILE}\"" )
 endif()
 
-# there are no applicable dependencies in the sourcetree
+#
+# Generated from sourcetree: 4F37D84F-3316-403F-9828-E951D58F9C1C;harfbuzz;no-all-load,no-cmake-loader,no-cmake-platform-linux,no-cmake-searchpath,no-craft-platform-linux,no-import;
+# Disable with : `mulle-sourcetree mark harfbuzz no-link`
+# Disable for this platform: `mulle-sourcetree mark harfbuzz no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark harfbuzz no-cmake-sdk-<name>`
+#
+if( NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   if( COLLECT_DEPENDENCY_LIBRARIES_AS_NAMES)
+      list( APPEND DEPENDENCY_LIBRARIES "harfbuzz")
+   else()
+      if( NOT HARFBUZZ_LIBRARY)
+         find_library( HARFBUZZ_LIBRARY NAMES
+            ${CMAKE_STATIC_LIBRARY_PREFIX}harfbuzz${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}harfbuzz${CMAKE_STATIC_LIBRARY_SUFFIX}
+            harfbuzz
+            NO_CMAKE_SYSTEM_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_FIND_ROOT_PATH
+         )
+         if( NOT HARFBUZZ_LIBRARY AND NOT DEPENDENCY_IGNORE_SYSTEM_LIBARIES)
+            find_library( HARFBUZZ_LIBRARY NAMES
+               ${CMAKE_STATIC_LIBRARY_PREFIX}harfbuzz${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+               ${CMAKE_STATIC_LIBRARY_PREFIX}harfbuzz${CMAKE_STATIC_LIBRARY_SUFFIX}
+               harfbuzz
+            )
+         endif()
+         message( STATUS "HARFBUZZ_LIBRARY is ${HARFBUZZ_LIBRARY}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( HARFBUZZ_LIBRARY)
+            #
+            # Add HARFBUZZ_LIBRARY to DEPENDENCY_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark harfbuzz no-cmake-add`
+            #
+            list( APPEND DEPENDENCY_LIBRARIES ${HARFBUZZ_LIBRARY})
+            #
+            # Inherit information from dependency.
+            # Encompasses: no-cmake-searchpath,no-cmake-dependency,no-cmake-loader
+            # Disable with: `mulle-sourcetree mark harfbuzz no-cmake-inherit`
+            #
+            # temporarily expand CMAKE_MODULE_PATH
+            get_filename_component( _TMP_HARFBUZZ_ROOT "${HARFBUZZ_LIBRARY}" DIRECTORY)
+            get_filename_component( _TMP_HARFBUZZ_ROOT "${_TMP_HARFBUZZ_ROOT}" DIRECTORY)
+            #
+            #
+            # Search for "Definitions.cmake" and "DependenciesAndLibraries.cmake" to include.
+            # Disable with: `mulle-sourcetree mark harfbuzz no-cmake-dependency`
+            #
+            foreach( _TMP_HARFBUZZ_NAME "harfbuzz")
+               set( _TMP_HARFBUZZ_DIR "${_TMP_HARFBUZZ_ROOT}/include/${_TMP_HARFBUZZ_NAME}/cmake")
+               # use explicit path to avoid "surprises"
+               if( IS_DIRECTORY "${_TMP_HARFBUZZ_DIR}")
+                  list( INSERT CMAKE_MODULE_PATH 0 "${_TMP_HARFBUZZ_DIR}")
+                  #
+                  include( "${_TMP_HARFBUZZ_DIR}/DependenciesAndLibraries.cmake" OPTIONAL)
+                  #
+                  list( REMOVE_ITEM CMAKE_MODULE_PATH "${_TMP_HARFBUZZ_DIR}")
+                  #
+                  unset( HARFBUZZ_DEFINITIONS)
+                  include( "${_TMP_HARFBUZZ_DIR}/Definitions.cmake" OPTIONAL)
+                  list( APPEND INHERITED_DEFINITIONS ${HARFBUZZ_DEFINITIONS})
+                  break()
+               else()
+                  message( STATUS "${_TMP_HARFBUZZ_DIR} not found")
+               endif()
+            endforeach()
+         else()
+            # Disable with: `mulle-sourcetree mark harfbuzz no-require-link`
+            message( SEND_ERROR "HARFBUZZ_LIBRARY was not found in ${CMAKE_STATIC_LIBRARY_PREFIX}harfbuzz${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+${CMAKE_STATIC_LIBRARY_PREFIX}harfbuzz${CMAKE_STATIC_LIBRARY_SUFFIX}
+harfbuzz")
+         endif()
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 988F76FC-5977-405F-9093-C0E4B73159A2;freetype;no-all-load,no-cmake-inherit,no-header,no-import,no-inplace,no-require,only-liftheaders;Debug:freetyped,Release:freetype
+# Disable with : `mulle-sourcetree mark freetype no-link`
+# Disable for this platform: `mulle-sourcetree mark freetype no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark freetype no-cmake-sdk-<name>`
+#
+if( COLLECT_DEPENDENCY_LIBRARIES_AS_NAMES)
+   list( APPEND DEPENDENCY_LIBRARIES "Debug:freetyped")
+else()
+   if( NOT FREETYPE_LIBRARY)
+      if( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+         find_library( FREETYPE_LIBRARY NAMES
+            ${CMAKE_STATIC_LIBRARY_PREFIX}freetyped${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}freetyped${CMAKE_STATIC_LIBRARY_SUFFIX}
+            freetyped
+            NO_CMAKE_SYSTEM_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_FIND_ROOT_PATH
+         )
+         if( NOT FREETYPE_LIBRARY AND NOT DEPENDENCY_IGNORE_SYSTEM_LIBARIES)
+            find_library( FREETYPE_LIBRARY NAMES
+               ${CMAKE_STATIC_LIBRARY_PREFIX}freetyped${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+               ${CMAKE_STATIC_LIBRARY_PREFIX}freetyped${CMAKE_STATIC_LIBRARY_SUFFIX}
+               freetyped
+            )
+         endif()
+      endif()
+      if( NOT FREETYPE_LIBRARY)
+         find_library( FREETYPE_LIBRARY NAMES
+            ${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX}
+            freetype
+            NO_CMAKE_SYSTEM_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_FIND_ROOT_PATH
+         )
+         if( NOT FREETYPE_LIBRARY AND NOT DEPENDENCY_IGNORE_SYSTEM_LIBARIES)
+            find_library( FREETYPE_LIBRARY NAMES
+               ${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+               ${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX}
+               freetype
+            )
+         endif()
+      endif()
+      message( STATUS "FREETYPE_LIBRARY is ${FREETYPE_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( FREETYPE_LIBRARY)
+         #
+         # Add FREETYPE_LIBRARY to DEPENDENCY_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark freetype no-cmake-add`
+         #
+         list( APPEND DEPENDENCY_LIBRARIES ${FREETYPE_LIBRARY})
+         # intentionally left blank
+      else()
+         # Enable with: `mulle-sourcetree mark freetype require`
+         message( STATUS "FREETYPE_LIBRARY is missing but it is marked as \"no-require\"")
+      endif()
+   endif()
+endif()

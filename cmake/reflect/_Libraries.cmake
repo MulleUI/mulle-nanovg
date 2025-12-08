@@ -11,4 +11,74 @@ if( MULLE_TRACE_INCLUDE)
    message( STATUS "# Include \"${CMAKE_CURRENT_LIST_FILE}\"" )
 endif()
 
-# there are no libraries in the sourcetree
+#
+# Generated from sourcetree: A09F2662-B20B-4F81-AB4C-DA7B616D2736;m;no-all-load,no-build,no-delete,no-dependency,no-fs,no-header,no-import,no-update,only-platform-linux;
+# Disable with : `mulle-sourcetree mark m `
+# Disable for this platform: `mulle-sourcetree mark m no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark m no-cmake-sdk-<name>`
+#
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+      list( APPEND OS_SPECIFIC_LIBRARIES "m")
+   else()
+      if( NOT M_LIBRARY)
+         find_library( M_LIBRARY NAMES
+            m
+         )
+         message( STATUS "M_LIBRARY is ${M_LIBRARY}")
+         #
+         # The order looks ascending, but due to the way this file is read
+         # it ends up being descending, which is what we need.
+         #
+         if( M_LIBRARY)
+            #
+            # Add M_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+            # Disable with: `mulle-sourcetree mark m no-cmake-add`
+            #
+            list( APPEND OS_SPECIFIC_LIBRARIES ${M_LIBRARY})
+            #
+            # Inherit information from dependency.
+            # Encompasses: no-cmake-searchpath,no-cmake-dependency,no-cmake-loader
+            # Disable with: `mulle-sourcetree mark m no-cmake-inherit`
+            #
+            # temporarily expand CMAKE_MODULE_PATH
+            get_filename_component( _TMP_M_ROOT "${M_LIBRARY}" DIRECTORY)
+            get_filename_component( _TMP_M_ROOT "${_TMP_M_ROOT}" DIRECTORY)
+            #
+            #
+            # Search for "Definitions.cmake" and "DependenciesAndLibraries.cmake" to include.
+            # Disable with: `mulle-sourcetree mark m no-cmake-dependency`
+            #
+            foreach( _TMP_M_NAME "m")
+               set( _TMP_M_DIR "${_TMP_M_ROOT}/include/${_TMP_M_NAME}/cmake")
+               # use explicit path to avoid "surprises"
+               if( IS_DIRECTORY "${_TMP_M_DIR}")
+                  list( INSERT CMAKE_MODULE_PATH 0 "${_TMP_M_DIR}")
+                  # we only want top level INHERIT_OBJC_LOADERS, so disable them
+                  if( NOT NO_INHERIT_OBJC_LOADERS)
+                     set( NO_INHERIT_OBJC_LOADERS OFF)
+                  endif()
+                  list( APPEND _TMP_INHERIT_OBJC_LOADERS ${NO_INHERIT_OBJC_LOADERS})
+                  set( NO_INHERIT_OBJC_LOADERS ON)
+                  #
+                  include( "${_TMP_M_DIR}/DependenciesAndLibraries.cmake" OPTIONAL)
+                  #
+                  list( GET _TMP_INHERIT_OBJC_LOADERS -1 NO_INHERIT_OBJC_LOADERS)
+                  list( REMOVE_AT _TMP_INHERIT_OBJC_LOADERS -1)
+                  list( REMOVE_ITEM CMAKE_MODULE_PATH "${_TMP_M_DIR}")
+                  #
+                  unset( M_DEFINITIONS)
+                  include( "${_TMP_M_DIR}/Definitions.cmake" OPTIONAL)
+                  list( APPEND INHERITED_DEFINITIONS ${M_DEFINITIONS})
+                  break()
+               else()
+                  message( STATUS "${_TMP_M_DIR} not found")
+               endif()
+            endforeach()
+         else()
+            # Disable with: `mulle-sourcetree mark m no-require-link`
+            message( SEND_ERROR "M_LIBRARY was not found in m")
+         endif()
+      endif()
+   endif()
+endif()

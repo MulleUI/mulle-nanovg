@@ -34,3 +34,9 @@ export MULLE_CRAFT_PLATFORMS="linux:windows"
 export MULLE_CRAFT_TOOLCHAIN__WINDOWS="toolchain-llvm-mingw-clang"
 
 
+#
+#
+#
+export MULLE_EMULATOR_WINDOWS="/home/src/srcO/MulleFoundation/MulleObjCOSFoundation/research/wine-x11-container/run-on-host"
+
+
