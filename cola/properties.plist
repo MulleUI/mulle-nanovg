@@ -15,16 +15,9 @@
    (
       {
          domain="github";
-         name="harfbuzz";
-         repo="harfbuzz";
-         url="https://github.com/harfbuzz/harfbuzz";
-         user="harfbuzz";
-      },
-      {
-         domain="github";
-         name="freetype";
-         repo="freetype";
-         url="https://github.com/MulleUI/freetype";
+         name="mulle-freetype";
+         repo="mulle-freetype";
+         url="https://github.com/MulleUI/mulle-freetype";
          user="MulleUI";
       }
    );

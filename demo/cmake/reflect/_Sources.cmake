@@ -32,7 +32,6 @@ src/main-windows.c
 src/main-windows-d3d11-fbo.c
 src/main-windows-d3d11-minimal.c
 src/main-windows-d3d11-readpixels.c
-../src/mulle-nanovg.c
 ../src/nanovg.c
 ../src/nanovg_d3d11.c
 ../src/nanovg_mtl.m

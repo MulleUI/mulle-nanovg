@@ -22,7 +22,7 @@
 //    remove #include: `mulle-sde dependency mark glfw no-header`
 //    rename              : `mulle-sde dependency|library set glfw include whatever.h`
 //    reorder             : `mulle-sde dependency move glfw <up|down>`
-//    toggle #include: `mulle-sde dependency mark glfw [no-]import`
+//    toggle objc         : `mulle-sde dependency mark glfw [no-]import`
 //    toggle public       : `mulle-sde dependency mark glfw [no-]public`
 //    toggle optional     : `mulle-sde dependency mark glfw [no-]require`
 //    remove for platform : `mulle-sde dependency mark glfw no-platform-<uname>`
@@ -37,7 +37,7 @@
 //    remove #include: `mulle-sde dependency mark Metal no-header`
 //    rename              : `mulle-sde dependency|library set Metal include whatever.h`
 //    reorder             : `mulle-sde dependency move Metal <up|down>`
-//    toggle #include: `mulle-sde dependency mark Metal [no-]import`
+//    toggle objc         : `mulle-sde dependency mark Metal [no-]import`
 //    toggle public       : `mulle-sde dependency mark Metal [no-]public`
 //    toggle optional     : `mulle-sde dependency mark Metal [no-]require`
 //    remove for platform : `mulle-sde dependency mark Metal no-platform-<uname>`
@@ -54,7 +54,7 @@
 //    remove #include: `mulle-sde dependency mark QuartzCore no-header`
 //    rename              : `mulle-sde dependency|library set QuartzCore include whatever.h`
 //    reorder             : `mulle-sde dependency move QuartzCore <up|down>`
-//    toggle #include: `mulle-sde dependency mark QuartzCore [no-]import`
+//    toggle objc         : `mulle-sde dependency mark QuartzCore [no-]import`
 //    toggle public       : `mulle-sde dependency mark QuartzCore [no-]public`
 //    toggle optional     : `mulle-sde dependency mark QuartzCore [no-]require`
 //    remove for platform : `mulle-sde dependency mark QuartzCore no-platform-<uname>`
@@ -71,7 +71,7 @@
 //    remove #include: `mulle-sde dependency mark CoreGraphics no-header`
 //    rename              : `mulle-sde dependency|library set CoreGraphics include whatever.h`
 //    reorder             : `mulle-sde dependency move CoreGraphics <up|down>`
-//    toggle #include: `mulle-sde dependency mark CoreGraphics [no-]import`
+//    toggle objc         : `mulle-sde dependency mark CoreGraphics [no-]import`
 //    toggle public       : `mulle-sde dependency mark CoreGraphics [no-]public`
 //    toggle optional     : `mulle-sde dependency mark CoreGraphics [no-]require`
 //    remove for platform : `mulle-sde dependency mark CoreGraphics no-platform-<uname>`
@@ -88,7 +88,7 @@
 //    remove #include: `mulle-sde dependency mark Foundation no-header`
 //    rename              : `mulle-sde dependency|library set Foundation include whatever.h`
 //    reorder             : `mulle-sde dependency move Foundation <up|down>`
-//    toggle #include: `mulle-sde dependency mark Foundation [no-]import`
+//    toggle objc         : `mulle-sde dependency mark Foundation [no-]import`
 //    toggle public       : `mulle-sde dependency mark Foundation [no-]public`
 //    toggle optional     : `mulle-sde dependency mark Foundation [no-]require`
 //    remove for platform : `mulle-sde dependency mark Foundation no-platform-<uname>`
@@ -105,7 +105,7 @@
 //    remove #include: `mulle-sde dependency mark IOKit no-header`
 //    rename              : `mulle-sde dependency|library set IOKit include whatever.h`
 //    reorder             : `mulle-sde dependency move IOKit <up|down>`
-//    toggle #include: `mulle-sde dependency mark IOKit [no-]import`
+//    toggle objc         : `mulle-sde dependency mark IOKit [no-]import`
 //    toggle public       : `mulle-sde dependency mark IOKit [no-]public`
 //    toggle optional     : `mulle-sde dependency mark IOKit [no-]require`
 //    remove for platform : `mulle-sde dependency mark IOKit no-platform-<uname>`
@@ -122,7 +122,7 @@
 //    remove #include: `mulle-sde dependency mark AppKit no-header`
 //    rename              : `mulle-sde dependency|library set AppKit include whatever.h`
 //    reorder             : `mulle-sde dependency move AppKit <up|down>`
-//    toggle #include: `mulle-sde dependency mark AppKit [no-]import`
+//    toggle objc         : `mulle-sde dependency mark AppKit [no-]import`
 //    toggle public       : `mulle-sde dependency mark AppKit [no-]public`
 //    toggle optional     : `mulle-sde dependency mark AppKit [no-]require`
 //    remove for platform : `mulle-sde dependency mark AppKit no-platform-<uname>`
@@ -132,20 +132,18 @@
 #endif
 
 // To remove the following dependency (headers and library) completely:
-//   `mulle-sde dependency remove harfbuzz`
-// (Use A348C24E-A401-4DE6-8377-710364BFAF60 instead of harfbuzz, if there are duplicate entries)
+//   `mulle-sde dependency remove mulle-freetype`
+// (Use 8CF4746B-C490-4EEC-A167-0F0796BC835C instead of mulle-freetype, if there are duplicate entries)
 //
 // You can tweak the following #include with these commands:
-//    remove #include: `mulle-sde dependency mark harfbuzz no-header`
-//    rename              : `mulle-sde dependency|library set harfbuzz include whatever.h`
-//    reorder             : `mulle-sde dependency move harfbuzz <up|down>`
-//    toggle #include: `mulle-sde dependency mark harfbuzz [no-]import`
-//    toggle public       : `mulle-sde dependency mark harfbuzz [no-]public`
-//    toggle optional     : `mulle-sde dependency mark harfbuzz [no-]require`
-//    remove for platform : `mulle-sde dependency mark harfbuzz no-platform-<uname>`
+//    remove #include: `mulle-sde dependency mark mulle-freetype no-header`
+//    rename              : `mulle-sde dependency|library set mulle-freetype include whatever.h`
+//    reorder             : `mulle-sde dependency move mulle-freetype <up|down>`
+//    toggle objc         : `mulle-sde dependency mark mulle-freetype [no-]import`
+//    toggle public       : `mulle-sde dependency mark mulle-freetype [no-]public`
+//    toggle optional     : `mulle-sde dependency mark mulle-freetype [no-]require`
+//    remove for platform : `mulle-sde dependency mark mulle-freetype no-platform-<uname>`
 //        (use `mulle-sourcetree-to-c --unames` to list known values)
-# if ! defined( __linux__)
-# include <harfbuzz/harfbuzz.h>   // harfbuzz
-#endif
+#include <mulle-freetype/mulle-freetype.h>   // mulle-freetype
 
 #endif

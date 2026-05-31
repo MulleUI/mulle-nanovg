@@ -18,6 +18,24 @@
 #ifndef NANOVG_GL_H
 #define NANOVG_GL_H
 
+// DLL export/import for mulle-sde Windows builds
+// These functions are compiled into MulleCGNanoVG_GL, not mulle-nanovg
+#ifndef MULLE__NANOVG_GL_GLOBAL
+# ifdef MULLE__NANOVG_GL_BUILD
+#  if defined( _WIN32)
+#   define MULLE__NANOVG_GL_GLOBAL    extern __declspec( dllexport)
+#  else
+#   define MULLE__NANOVG_GL_GLOBAL    extern
+#  endif
+# else
+#  if defined( _WIN32) && !defined( MULLE__NANOVG_GL_INCLUDE_STATIC)
+#   define MULLE__NANOVG_GL_GLOBAL    extern __declspec( dllimport)
+#  else
+#   define MULLE__NANOVG_GL_GLOBAL    extern
+#  endif
+# endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,7 +50,9 @@ extern "C" {
 
 
 //#define DEBUG_IMAGE
-
+#ifdef DEBUG_IMAGE
+# include <pthread.h>
+#endif
 
 // Create flags
 
@@ -88,40 +108,56 @@ enum NVGcreateFlags {
 
 #if defined NANOVG_GL2
 
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGL2(int flags);
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGL2(NVGcontext* ctx);
 
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGL2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGL2(NVGcontext* ctx, int image);
 
 #endif
 
 #if defined NANOVG_GL3
 
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGL3(int flags);
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGL3(NVGcontext* ctx);
 
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGL3(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGL3(NVGcontext* ctx, int image);
 
 #endif
 
 #if defined NANOVG_GLES2
 
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGLES2(int flags);
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGLES2(NVGcontext* ctx);
 
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
 
 #endif
 
 #if defined NANOVG_GLES3
 
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGLES3(int flags);
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGLES3(NVGcontext* ctx);
 
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGLES3(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGLES3(NVGcontext* ctx, int image);
 
 #endif
@@ -465,7 +501,7 @@ static int glnvg__deleteTexture(GLNVGcontext* gl, int id)
 	if( ! tex)
 		return 0;
 #ifdef DEBUG_IMAGE
-	fprintf( stderr, "Delete image %d tex: %p gpu: %d type: %d flags: 0x%x\n", tex->id, tex, tex->tex, tex->type, tex->flags);
+	fprintf( stderr, "[%p-%p] Delete image %d tex: %p gpu: %d type: %d flags: 0x%x\n", (void *) pthread_self(), gl, tex->id, tex, tex->tex, tex->type, tex->flags);
 #endif
 	if( (tex->flags & NVG_IMAGE_NODELETE) == 0)
 		glDeleteTextures(1, &tex->tex);
@@ -482,7 +518,7 @@ static void glnvg__dumpShaderError(GLuint shader, const char* name, const char* 
 	glGetShaderInfoLog(shader, 512, &len, str);
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	printf("Shader %s/%s error:\n%s\n", name, type, str);
+	fprintf(stderr, "Shader %s/%s error:\n%s\n", name, type, str);
 }
 
 static void glnvg__dumpProgramError(GLuint prog, const char* name)
@@ -492,7 +528,7 @@ static void glnvg__dumpProgramError(GLuint prog, const char* name)
 	glGetProgramInfoLog(prog, 512, &len, str);
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	printf("Program %s error:\n%s\n", name, str);
+	fprintf(stderr, "Program %s error:\n%s\n", name, str);
 }
 
 static void glnvg__checkError(GLNVGcontext* gl, const char* str)
@@ -501,7 +537,7 @@ static void glnvg__checkError(GLNVGcontext* gl, const char* str)
 	if ((gl->flags & NVG_DEBUG) == 0) return;
 	err = glGetError();
 	if (err != GL_NO_ERROR) {
-		printf("Error %08x after %s\n", err, str);
+		fprintf(stderr, "Error %08x after %s\n", err, str);
 		assert( err == GL_NO_ERROR);
 		return;
 	}
@@ -784,11 +820,15 @@ static int glnvg__renderCreate(void* uptr)
 	glnvg__checkError(gl, "init");
 
 	if (gl->flags & NVG_ANTIALIAS) {
-		if (glnvg__createShader(&gl->shader, "shader", shaderHeader, "#define EDGE_AA 1\n", fillVertShader, fillFragShader) == 0)
+		if (glnvg__createShader(&gl->shader, "shader", shaderHeader, "#define EDGE_AA 1\n", fillVertShader, fillFragShader) == 0) {
+			fprintf(stderr, "nanovg: shader creation failed (AA)\n");
 			return 0;
+		}
 	} else {
-		if (glnvg__createShader(&gl->shader, "shader", shaderHeader, NULL, fillVertShader, fillFragShader) == 0)
+		if (glnvg__createShader(&gl->shader, "shader", shaderHeader, NULL, fillVertShader, fillFragShader) == 0) {
+			fprintf(stderr, "nanovg: shader creation failed (no AA)\n");
 			return 0;
+		}
 	}
 
 	glnvg__checkError(gl, "uniform locations");
@@ -979,7 +1019,7 @@ static int glnvg__renderCreateTexture(void* uptr, int type, int w, int h, int im
 	glnvg__bindTexture(gl, 0, glnvg__isMSAATexture( tex));
 
 #ifdef DEBUG_IMAGE
-	fprintf( stderr, "Create image %d tex: %p gpu: %d type: %d flags: 0x%x\n", tex->id, tex, tex->tex, tex->type, tex->flags);
+	fprintf( stderr, "[%p-%p] Create image %d tex: %p gpu: %d type: %d flags: 0x%x\n", (void *) pthread_self(), gl, tex->id, tex, tex->tex, tex->type, tex->flags);
 #endif
 
 	return tex->id;
@@ -1000,7 +1040,7 @@ static int glnvg__renderDefineTexture(void* uptr, int w, int h, int flags, int t
 	tex->tex    = (int) (intptr_t) texture;
 
 #ifdef DEBUG_IMAGE
-	fprintf( stderr, "Define image %d tex: %p gpu: %d type: %d flags: 0x%x\n", tex->id, tex, tex->tex, tex->type, tex->flags);
+	fprintf( stderr, "[%p-%p] Define image %d tex: %p gpu: %d type: %d flags: 0x%x\n", (void *) pthread_self(), gl, tex->id, tex, tex->tex, tex->type, tex->flags);
 #endif
 	return tex->id;
 }
@@ -1038,18 +1078,19 @@ static int   glnvg__renderGetTextureInfo(void* uptr, int image, int *p_flags, in
 //
 static int glnvg__renderForgetTexture(void* uptr, int image)
 {
-	GLNVGcontext* gl = (GLNVGcontext*)uptr;
-	GLNVGtexture* tex = glnvg__findTexture(gl, image);
+   GLNVGcontext* gl = (GLNVGcontext*)uptr;
+   GLNVGtexture* tex = glnvg__findTexture(gl, image);
 
-	if( ! tex)
-		return 0;
+   if( ! tex)
+      return 0;
 #ifdef DEBUG_IMAGE
-	fprintf( stderr, "Forget image %d tex: %p gpu: %d type: %d flags: 0x%x\n", tex->id, tex, tex->tex, tex->type, tex->flags);
+   fprintf( stderr, "[%p-%p] Forget image %d tex: %p gpu: %d type: %d flags: 0x%x\n", (void *) pthread_self(), gl, tex->id, tex, tex->tex, tex->type, tex->flags);
 #endif
-	tex->tex    = 0;
-	tex->flags |= NVG_IMAGE_NODELETE;
-	return 1;
+   tex->id     = 0;  // allow reuse, also won't be "accidentally found"
+   tex->flags |= NVG_IMAGE_NODELETE; // do not delete until reused
+   return 1;
 }
+
 
 // @mulle-nanovg@ <<
 
@@ -1247,12 +1288,17 @@ static void glnvg__setUniforms(GLNVGcontext* gl, int uniformOffset, int image)
 	if (tex != NULL)
 	{
 #ifdef DEBUG_IMAGE
-		fprintf( stderr, "Bind   image %d tex: %p gpu: %d type: %d flags: 0x%x\n", tex->id, tex, tex->tex, tex->type, tex->flags);
+		fprintf( stderr, "[%p-%p] Bind   image %d tex: %p gpu: %d type: %d flags: 0x%x\n", (void *) pthread_self(), gl, tex->id, tex, tex->tex, tex->type, tex->flags);
 #endif
 		glnvg__bindTexture(gl, tex->tex, glnvg__isMSAATexture( tex));
 	}
 	else
+   {
+#ifdef DEBUG_IMAGE
+      fprintf( stderr, "[%p-%p] Unbind image\n", (void *) pthread_self(), gl);
+#endif
 		glnvg__bindTexture(gl, 0, 0);
+   }
 	glnvg__checkError(gl, "tex bind tex");
 }
 
@@ -1793,6 +1839,7 @@ error:
 static void glnvg__renderDelete(void* uptr)
 {
 	GLNVGcontext* gl = (GLNVGcontext*)uptr;
+   GLNVGtexture*  tex;
 	int i;
 	if (gl == NULL) return;
 
@@ -1810,8 +1857,19 @@ static void glnvg__renderDelete(void* uptr)
 		glDeleteBuffers(1, &gl->vertBuf);
 
 	for (i = 0; i < gl->ntextures; i++) {
-		if (gl->textures[i].tex != 0 && (gl->textures[i].flags & NVG_IMAGE_NODELETE) == 0)
-			glDeleteTextures(1, &gl->textures[i].tex);
+#ifdef DEBUG_IMAGE
+      fprintf( stderr, "[%p-%p] Delete images on context delete\n", (void *) pthread_self());
+#endif
+      tex = &gl->textures[i];
+		if ( tex->tex != 0 && (tex->flags & NVG_IMAGE_NODELETE) == 0)
+      {
+#ifdef DEBUG_IMAGE
+         fprintf( stderr, "[%p-%p] Delete image %d tex: %p gpu: %d type: %d flags: 0x%x\n", (void *) pthread_self(), gl, tex->id, tex, tex->tex, tex->type, tex->flags);
+#endif
+
+			glDeleteTextures(1, &tex->tex);
+         glnvg__checkError(gl, "tex delete tex");
+      }
 	}
 	free(gl->textures);
 
@@ -1961,12 +2019,16 @@ static void dummynvg__renderDelete(void* uptr)
 
 
 #if defined NANOVG_GL2
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGL2(int flags)
 #elif defined NANOVG_GL3
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGL3(int flags)
 #elif defined NANOVG_GLES2
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGLES2(int flags)
 #elif defined NANOVG_GLES3
+MULLE__NANOVG_GL_GLOBAL
 NVGcontext* nvgCreateGLES3(int flags)
 #endif
 {
@@ -2069,12 +2131,16 @@ error:
 }
 
 #if defined NANOVG_GL2
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGL2(NVGcontext* ctx)
 #elif defined NANOVG_GL3
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGL3(NVGcontext* ctx)
 #elif defined NANOVG_GLES2
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGLES2(NVGcontext* ctx)
 #elif defined NANOVG_GLES3
+MULLE__NANOVG_GL_GLOBAL
 void nvgDeleteGLES3(NVGcontext* ctx)
 #endif
 {
@@ -2082,12 +2148,16 @@ void nvgDeleteGLES3(NVGcontext* ctx)
 }
 
 #if defined NANOVG_GL2
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGL2(NVGcontext* ctx, GLuint textureId, int w, int h, int imageFlags)
 #elif defined NANOVG_GL3
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGL3(NVGcontext* ctx, GLuint textureId, int w, int h, int imageFlags)
 #elif defined NANOVG_GLES2
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int imageFlags)
 #elif defined NANOVG_GLES3
+MULLE__NANOVG_GL_GLOBAL
 int nvglCreateImageFromHandleGLES3(NVGcontext* ctx, GLuint textureId, int w, int h, int imageFlags)
 #endif
 {
@@ -2112,12 +2182,16 @@ int nvglCreateImageFromHandleGLES3(NVGcontext* ctx, GLuint textureId, int w, int
 }
 
 #if defined NANOVG_GL2
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGL2(NVGcontext* ctx, int image)
 #elif defined NANOVG_GL3
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGL3(NVGcontext* ctx, int image)
 #elif defined NANOVG_GLES2
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image)
 #elif defined NANOVG_GLES3
+MULLE__NANOVG_GL_GLOBAL
 GLuint nvglImageHandleGLES3(NVGcontext* ctx, int image)
 #endif
 {

@@ -3,7 +3,7 @@
 - Plus better debugging support.
 - Plus bug fixes.
 
-This project combines:
+**mulle-nanovg** combines
 
 - **nanovg** - Antialiased 2D vector drawing library for OpenGL (custom fork with trace support)
 - **MetalNanoVG** - Metal backend for macOS/iOS
@@ -11,4 +11,3 @@ This project combines:
 - **nanovg_vulkan** - Vulkan backend
 
 into a single project.
-

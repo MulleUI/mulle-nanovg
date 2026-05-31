@@ -192,68 +192,47 @@ But this example was run with GLES2...
 
 
 
-## Add
+## Add to mulle-sde
 
-Use [mulle-sde](//github.com/mulle-sde) to add mulle-nanovg to your project:
+So the most likely scenario of usage, is that you use mulle-nanovg as an
+embedded dependency. This allows you to customize the way you include nanovg
+into your project. This unfortunately precludes the automagic linking of
+its dependencies and libraries. Here is what you will need:
 
-``` sh
-mulle-sde add github:MulleUI/mulle-nanovg
+### All Platforms
+
+
+``` bash
+mulle-sde library add --c github:MulleUI/mulle-freetype
 ```
 
-To only add the sources of mulle-nanovg with dependency
-sources use [clib](https://github.com/clibs/clib):
 
+### Darwin
 
-``` sh
-clib install --out src/MulleUI MulleUI/mulle-nanovg
+``` bash
+mulle-sde library add --framework 'Metal'
+mulle-sde library add --framework 'QuartzCore'
+mulle-sde library add --framework 'CoreGraphics'
+mulle-sde library add --framework 'Foundation'
+mulle-sde library add --framework 'IOKit'
+mulle-sde library add --framework 'AppKit'
 ```
 
-Add `-isystem src/MulleUI` to your `CFLAGS` and compile all the sources that were downloaded with your project.
+### Linux
 
-
-## Install
-
-Use [mulle-sde](//github.com/mulle-sde) to build and install mulle-nanovg and all dependencies:
-
-``` sh
-mulle-sde install --prefix /usr/local \
-   https://github.com/MulleUI/mulle-nanovg/archive/latest.tar.gz
+``` bash
+mulle-sde library add --c --no-header --platform linux 'm'
+mulle-sde library add --c --no-header --platform linux 'GLESv2'
+mulle-sde library add --c --no-header --platform linux 'vulkan'
 ```
 
-### Legacy Installation
+### Windows
 
-Install the requirements:
-
-| Requirements                                 | Description
-|----------------------------------------------|-----------------------
-| [harfbuzz](https://github.com/harfbuzz/harfbuzz)             | 
-| [freetype](https://github.com/MulleUI/freetype)             | 
-
-Download the latest [tar](https://github.com/MulleUI/mulle-nanovg/archive/refs/tags/latest.tar.gz) or [zip](https://github.com/MulleUI/mulle-nanovg/archive/refs/tags/latest.zip) archive and unpack it.
-
-Install **mulle-nanovg** into `/usr/local` with [cmake](https://cmake.org):
-
-``` sh
-PREFIX_DIR="/usr/local"
-cmake -B build                               \
-      -DMULLE_SDK_PATH="${PREFIX_DIR}"       \
-      -DCMAKE_INSTALL_PREFIX="${PREFIX_DIR}" \
-      -DCMAKE_PREFIX_PATH="${PREFIX_DIR}"    \
-      -DCMAKE_BUILD_TYPE=Release &&
-cmake --build build --config Release &&
-cmake --install build --config Release
+``` bash
+mulle-sde library add --c --no-header --platform windows 'd3d11'
+mulle-sde library add --c --no-header --platform windows 'dxgi'
 ```
 
-## Author and Licensing Information
-
-
-| Component                                          | Fork used                                  | Authors                                      | License
-|----------------------------------------------------|--------------------------------------------|----------------------------------------------|------------
-| [mulle-nanovg]()                                   | N/A                                        | nat@mulle-kybernetik.com (Nat!)              | BSD-3 Clause
-| [nanovg](//github.com/memononen/nanovg)            | <//github.com/MulleUI/nanovg>              | nat@mulle-kybernetik.com (Nat!)              | ZIP License
-| [nanovg_dx11](//github.com/cmaughan/nanovg)        | <//github.com/Tremus/nanovg_dx11>          | https://twitter.com/cmaughan (Chris Maughan) | ZIP License
-| [nanovg_vulkan](//github.com/danilw/nanovg_vulkan) | <//github.com/SubiyaCryolite/nanovg_vulkan>| s48gs.w@gmail.com (Danil)<br>ifungandana@gmail.com (Ifunga Ndana) | ZIP License
-| [MetalNanoVG](//github.com/ollix/MetalNanoVG)      | <//github.com/Tremus/MetalNanoVG>          | olliwang@ollix.com (Olli Wang)               | MIT License
 
 
 ## Author and Licensing Information

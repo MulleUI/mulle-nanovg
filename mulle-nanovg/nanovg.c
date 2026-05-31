@@ -455,7 +455,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 
 	// only in full context
 	if( ctx->params.contextType == NVG_FULL_CONTEXT)
-		if (ctx->params.renderCreate(ctx->params.userPtr) == 0) goto error;
+		if (ctx->params.renderCreate(ctx->params.userPtr) == 0) { fprintf(stderr, "nvgCreateInternal: renderCreate failed\n"); goto error; }
 
 	// Init font rendering
 	for( i = 0; i < (params->clearType ? 2 : 1); i++)
@@ -468,7 +468,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 		fontParams.flags = FONS_ZERO_TOPLEFT;
 
 		fctx->fs = fonsCreateInternal(&fontParams);
-		if (fctx->fs == NULL) goto error;
+		if (fctx->fs == NULL) { fprintf(stderr, "nvgCreateInternal: fonsCreateInternal failed (i=%d)\n", i); goto error; }
 
 		// we have no cleartype in font context
 		if( ctx->params.contextType == NVG_FONT_CONTEXT)
@@ -484,7 +484,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 																  0,
 																  NULL);
 		fctx->fontImages[0] = fontImage;
-		if (fontImage == 0) goto error;
+		if (fontImage == 0) { fprintf(stderr, "nvgCreateInternal: renderCreateTexture failed (i=%d)\n", i); goto error; }
 	}
 
 	return ctx;
@@ -1111,7 +1111,6 @@ void nvgClearType(NVGcontext* ctx, int enabled)
 	assert( ! enabled || ctx->params.clearType);
 
 	NVGstate* state = nvg__getState(ctx);
-	// only enable, if successfully initted otherwise keep as is (0)
 	if( ctx->fontContexts[ 1].fs)
 		state->clearType = enabled ? 1 : 0; // need it as index later
 }
@@ -1610,37 +1609,40 @@ static void nvg__appendCommands(NVGcontext* ctx, float* vals, int nvals)
 		ctx->commandy = vals[nvals-1];
 	}
 
-	// transform commands
+	// copy first into destination, then transform there — never modify the source
+	memcpy(&ctx->commands[ctx->ncommands], vals, nvals*sizeof(float));
+
 	i = 0;
-	while (i < nvals) {
-		int cmd = (int)vals[i];
-		switch (cmd) {
-		case NVG_MOVETO:
-			nvgTransformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
-			i += 3;
-			break;
-		case NVG_LINETO:
-			nvgTransformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
-			i += 3;
-			break;
-		case NVG_BEZIERTO:
-			nvgTransformPoint(&vals[i+1],&vals[i+2], state->xform, vals[i+1],vals[i+2]);
-			nvgTransformPoint(&vals[i+3],&vals[i+4], state->xform, vals[i+3],vals[i+4]);
-			nvgTransformPoint(&vals[i+5],&vals[i+6], state->xform, vals[i+5],vals[i+6]);
-			i += 7;
-			break;
-		case NVG_CLOSE:
-			i++;
-			break;
-		case NVG_WINDING:
-			i += 2;
-			break;
-		default:
-			i++;
+	{
+		float *dst = &ctx->commands[ctx->ncommands];
+		while (i < nvals) {
+			int cmd = (int)dst[i];
+			switch (cmd) {
+			case NVG_MOVETO:
+				nvgTransformPoint(&dst[i+1],&dst[i+2], state->xform, dst[i+1],dst[i+2]);
+				i += 3;
+				break;
+			case NVG_LINETO:
+				nvgTransformPoint(&dst[i+1],&dst[i+2], state->xform, dst[i+1],dst[i+2]);
+				i += 3;
+				break;
+			case NVG_BEZIERTO:
+				nvgTransformPoint(&dst[i+1],&dst[i+2], state->xform, dst[i+1],dst[i+2]);
+				nvgTransformPoint(&dst[i+3],&dst[i+4], state->xform, dst[i+3],dst[i+4]);
+				nvgTransformPoint(&dst[i+5],&dst[i+6], state->xform, dst[i+5],dst[i+6]);
+				i += 7;
+				break;
+			case NVG_CLOSE:
+				i++;
+				break;
+			case NVG_WINDING:
+				i += 2;
+				break;
+			default:
+				i++;
+			}
 		}
 	}
-
-	memcpy(&ctx->commands[ctx->ncommands], vals, nvals*sizeof(float));
 
 	ctx->ncommands += nvals;
 }

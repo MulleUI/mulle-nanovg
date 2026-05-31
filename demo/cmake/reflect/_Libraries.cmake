@@ -54,22 +54,25 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
                # use explicit path to avoid "surprises"
                if( IS_DIRECTORY "${_TMP_M_DIR}")
                   list( INSERT CMAKE_MODULE_PATH 0 "${_TMP_M_DIR}")
-                  # we only want top level INHERIT_OBJC_LOADERS, so disable them
-                  if( NOT NO_INHERIT_OBJC_LOADERS)
-                     set( NO_INHERIT_OBJC_LOADERS OFF)
+                  # we only want top level INHERIT_OBJC_DEPS, so disable them
+                  if( NOT NO_INHERIT_OBJC_DEPS)
+                     set( NO_INHERIT_OBJC_DEPS OFF)
                   endif()
-                  list( APPEND _TMP_INHERIT_OBJC_LOADERS ${NO_INHERIT_OBJC_LOADERS})
-                  set( NO_INHERIT_OBJC_LOADERS ON)
+                  list( APPEND _TMP_INHERIT_OBJC_DEPS ${NO_INHERIT_OBJC_DEPS})
+                  set( NO_INHERIT_OBJC_DEPS ON)
                   #
                   include( "${_TMP_M_DIR}/DependenciesAndLibraries.cmake" OPTIONAL)
                   #
-                  list( GET _TMP_INHERIT_OBJC_LOADERS -1 NO_INHERIT_OBJC_LOADERS)
-                  list( REMOVE_AT _TMP_INHERIT_OBJC_LOADERS -1)
+                  list( GET _TMP_INHERIT_OBJC_DEPS -1 NO_INHERIT_OBJC_DEPS)
+                  list( REMOVE_AT _TMP_INHERIT_OBJC_DEPS -1)
                   list( REMOVE_ITEM CMAKE_MODULE_PATH "${_TMP_M_DIR}")
                   #
                   unset( M_DEFINITIONS)
+                  unset( M_RENDEZVOUS_GLOBALS)
                   include( "${_TMP_M_DIR}/Definitions.cmake" OPTIONAL)
                   list( APPEND INHERITED_DEFINITIONS ${M_DEFINITIONS})
+                  include( "${_TMP_M_DIR}/Definitions.cmake" OPTIONAL)
+                  list( APPEND RENDEZVOUS_GLOBALS ${M_RENDEZVOUS_GLOBALS})
                   break()
                else()
                   message( STATUS "${_TMP_M_DIR} not found")

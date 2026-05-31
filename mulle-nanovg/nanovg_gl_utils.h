@@ -18,6 +18,22 @@
 #ifndef NANOVG_GL_UTILS_H
 #define NANOVG_GL_UTILS_H
 
+#ifndef MULLE__NANOVG_GL_GLOBAL
+# ifdef MULLE__NANOVG_GL_BUILD
+#  if defined( _WIN32)
+#   define MULLE__NANOVG_GL_GLOBAL    extern __declspec( dllexport)
+#  else
+#   define MULLE__NANOVG_GL_GLOBAL    extern
+#  endif
+# else
+#  if defined( _WIN32) && !defined( MULLE__NANOVG_GL_INCLUDE_STATIC)
+#   define MULLE__NANOVG_GL_GLOBAL    extern __declspec( dllimport)
+#  else
+#   define MULLE__NANOVG_GL_GLOBAL    extern
+#  endif
+# endif
+#endif
+
 #include "nanovg-framebuffer.h"
 
 // Forward declare struct (defined after header guard)
@@ -25,13 +41,20 @@ struct NVGLUframebuffer;
 typedef struct NVGLUframebuffer NVGLUframebuffer;
 
 // Helper function to create GL frame buffer to render to.
+MULLE__NANOVG_GL_GLOBAL
 void nvgluBindReadFramebuffer(NVGframebuffer fb);
+MULLE__NANOVG_GL_GLOBAL
 void nvgluBindDrawFramebuffer(NVGframebuffer fb);
 
+MULLE__NANOVG_GL_GLOBAL
 void nvgluBindFramebuffer(NVGframebuffer fb);
+MULLE__NANOVG_GL_GLOBAL
 NVGframebuffer nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
+MULLE__NANOVG_GL_GLOBAL
 void nvgluDeleteFramebuffer(NVGframebuffer fb);
+MULLE__NANOVG_GL_GLOBAL
 void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color);
+MULLE__NANOVG_GL_GLOBAL
 void glnvgReadPixels(NVGcontext* ctx, NVGframebuffer fb, int x, int y, int width, int height, void* data);
 
 #endif // NANOVG_GL_UTILS_H
@@ -80,6 +103,7 @@ static GLint defaultFBO = -1;
 
 // https://learnopengl.com/Advanced-OpenGL/Anti-Aliasing
 
+MULLE__NANOVG_GL_GLOBAL
 NVGframebuffer nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags)
 {
 #ifdef NANOVG_FBO_VALID
@@ -178,6 +202,7 @@ error:
 #endif
 }
 
+MULLE__NANOVG_GL_GLOBAL
 void nvgluBindFramebuffer(NVGframebuffer fb)
 {
 #ifdef NANOVG_FBO_VALID
@@ -189,6 +214,7 @@ void nvgluBindFramebuffer(NVGframebuffer fb)
 #endif
 }
 
+MULLE__NANOVG_GL_GLOBAL
 void nvgluBindReadFramebuffer(NVGframebuffer fb)
 {
 #if (defined( NANOVG_GL3) || defined( NANOVG_GLES3)) && defined( NANOVG_FBO_VALID)
@@ -200,6 +226,7 @@ void nvgluBindReadFramebuffer(NVGframebuffer fb)
 #endif
 }
 
+MULLE__NANOVG_GL_GLOBAL
 void nvgluBindDrawFramebuffer(NVGframebuffer fb)
 {
 #if (defined( NANOVG_GL3) || defined( NANOVG_GLES3)) && defined( NANOVG_FBO_VALID)
@@ -212,6 +239,7 @@ void nvgluBindDrawFramebuffer(NVGframebuffer fb)
 }
 
 
+MULLE__NANOVG_GL_GLOBAL
 void nvgluDeleteFramebuffer(NVGframebuffer fb)
 {
 #ifdef NANOVG_FBO_VALID
@@ -234,6 +262,7 @@ void nvgluDeleteFramebuffer(NVGframebuffer fb)
 #endif
 }
 
+MULLE__NANOVG_GL_GLOBAL
 void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color)
 {
 #ifdef NANOVG_FBO_VALID
@@ -249,6 +278,7 @@ void nvgluClearWithColor(NVGcontext* ctx, NVGcolor color)
 #endif
 }
 
+MULLE__NANOVG_GL_GLOBAL
 void glnvgReadPixels(NVGcontext* ctx, NVGframebuffer fb, int x, int y, int width, int height, void* data)
 {
 #ifdef NANOVG_FBO_VALID

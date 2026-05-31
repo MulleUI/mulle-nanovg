@@ -1,0 +1,41 @@
+## Add to mulle-sde
+
+So the most likely scenario of usage, is that you use mulle-nanovg as an
+embedded dependency. This allows you to customize the way you include nanovg
+into your project. This unfortunately precludes the automagic linking of
+its dependencies and libraries. Here is what you will need:
+
+### All Platforms
+
+
+``` bash
+mulle-sde library add --c github:MulleUI/mulle-freetype
+```
+
+
+### Darwin
+
+``` bash
+mulle-sde library add --framework 'Metal'
+mulle-sde library add --framework 'QuartzCore'
+mulle-sde library add --framework 'CoreGraphics'
+mulle-sde library add --framework 'Foundation'
+mulle-sde library add --framework 'IOKit'
+mulle-sde library add --framework 'AppKit'
+```
+
+### Linux
+
+``` bash
+mulle-sde library add --c --no-header --platform linux 'm'
+mulle-sde library add --c --no-header --platform linux 'GLESv2'
+mulle-sde library add --c --no-header --platform linux 'vulkan'
+```
+
+### Windows
+
+``` bash
+mulle-sde library add --c --no-header --platform windows 'd3d11'
+mulle-sde library add --c --no-header --platform windows 'dxgi'
+```
+

@@ -11,74 +11,68 @@ endif()
 # contents are derived from the file locations
 
 set( INCLUDE_DIRS
-src/reflect
-src/generic
-src/d3d11_shaders
-src
-src/mnvg_bitcode
-)
-
-#
-# contents selected with patternfile ??-header--private-generated-headers
-#
-set( PRIVATE_GENERATED_HEADERS
-src/reflect/_mulle-nanovg-include-private.h
+mulle-nanovg/generic
+mulle-nanovg/reflect
+mulle-nanovg/d3d11_shaders
+mulle-nanovg
+mulle-nanovg/mnvg_bitcode
 )
 
 #
 # contents selected with patternfile ??-header--private-generic-headers
 #
 set( PRIVATE_GENERIC_HEADERS
-src/generic/include-private.h
+mulle-nanovg/generic/include-private.h
+)
+
+#
+# contents selected with patternfile ??-header--private-headers
+#
+set( PRIVATE_HEADERS
+mulle-nanovg/reflect/_mulle-nanovg-include-private.h
 )
 
 #
 # contents selected with patternfile ??-header--project-only-headers
 #
 set( PROJECT_ONLY_HEADERS
-src/nanovg-trace-support.inc
-src/shader/fill.frag.inc
-src/shader/fill.vert.inc
-)
-
-#
-# contents selected with patternfile ??-header--public-generated-headers
-#
-set( PUBLIC_GENERATED_HEADERS
-src/reflect/_mulle-nanovg-include.h
-src/reflect/_mulle-nanovg-provide.h
+mulle-nanovg/nanovg-trace-support.inc
+mulle-nanovg/shader/fill.frag.inc
+mulle-nanovg/shader/fill.vert.inc
 )
 
 #
 # contents selected with patternfile ??-header--public-generic-headers
 #
 set( PUBLIC_GENERIC_HEADERS
-src/generic/include.h
+mulle-nanovg/generic/include.h
 )
 
 #
 # contents selected with patternfile ??-header--public-headers
 #
 set( PUBLIC_HEADERS
-src/d3d11_shaders/D3D11PixelShaderAA.h
-src/d3d11_shaders/D3D11PixelShader.h
-src/d3d11_shaders/D3D11VertexShader.h
-src/fontstash.h
-src/mnvg_bitcode/ios.h
-src/mnvg_bitcode/macos.h
-src/mnvg_bitcode/simulator.h
-src/mnvg_bitcode/tvos.h
-src/mulle-nanovg.h
-src/nanovg_d3d11.h
-src/nanovg-framebuffer.h
-src/nanovg_gl.h
-src/nanovg_gl_utils.h
-src/nanovg.h
-src/nanovg_mtl.h
-src/nanovg-trace-functions.h
-src/nanovg_vk.h
-src/nanovg_vk_utils.h
-src/stb_image.h
-src/stb_truetype.h
+mulle-nanovg/d3d11_shaders/D3D11PixelShaderAA.h
+mulle-nanovg/d3d11_shaders/D3D11PixelShader.h
+mulle-nanovg/d3d11_shaders/D3D11VertexShader.h
+mulle-nanovg/fontstash.h
+mulle-nanovg/mnvg_bitcode/ios.h
+mulle-nanovg/mnvg_bitcode/macos.h
+mulle-nanovg/mnvg_bitcode/simulator.h
+mulle-nanovg/mnvg_bitcode/tvos.h
+mulle-nanovg/mulle-nanovg.h
+mulle-nanovg/nanovg_d3d11.h
+mulle-nanovg/nanovg-framebuffer.h
+mulle-nanovg/nanovg_gl.h
+mulle-nanovg/nanovg_gl_utils.h
+mulle-nanovg/nanovg.h
+mulle-nanovg/nanovg_mtl.h
+mulle-nanovg/nanovg-trace-functions.h
+mulle-nanovg/nanovg_vk.h
+mulle-nanovg/nanovg_vk_utils.h
+mulle-nanovg/reflect/_mulle-nanovg-include.h
+mulle-nanovg/reflect/_mulle-nanovg-provide.h
+mulle-nanovg/stb_image.h
+mulle-nanovg/stb_truetype.h
 )
 
