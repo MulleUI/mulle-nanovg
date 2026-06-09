@@ -6,6 +6,7 @@
 **mulle-nanovg** combines
 
 - **nanovg** - Antialiased 2D vector drawing library for OpenGL (custom fork with trace support)
+- **nanovg_rlgl** - rlgl backend (raylib's GL abstraction, works on GL3.3 and GLES2/3)
 - **MetalNanoVG** - Metal backend for macOS/iOS
 - **nanovg_dx11** - DirectX 11 backend for Windows
 - **nanovg_vulkan** - Vulkan backend

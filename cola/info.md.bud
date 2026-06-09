@@ -56,3 +56,65 @@ But this example was run with GLES2...
 > during development and we can probably in the future just #ifdef out the
 > backend we dont want to link against during recompilation)
 
+
+### Choosing a render backend
+
+Each backend is a header-only implementation that you activate with a single
+`#define` before including it:
+
+| Platform | Backend | Define | Header | Context Creator |
+|----------|---------|--------|--------|-----------------|
+| All (GL3.3/GLES2/GLES3) | rlgl | `NANOVG_RLGL_IMPLEMENTATION` | `nanovg_rlgl.h` | `nvgCreateRLGL` |
+| Linux/Windows (GL3.3) | OpenGL 3 | `NANOVG_GL3_IMPLEMENTATION` | `nanovg_gl.h` | `nvgCreateGL3` |
+| Linux/Windows (GLES3) | OpenGL ES 3 | `NANOVG_GLES3_IMPLEMENTATION` | `nanovg_gl.h` | `nvgCreateGLES3` |
+| Linux/Windows (GLES2) | OpenGL ES 2 | `NANOVG_GLES2_IMPLEMENTATION` | `nanovg_gl.h` | `nvgCreateGLES2` |
+| macOS/iOS | Metal | `NANOVG_MTL_IMPLEMENTATION` | `nanovg_mtl.h` | `nvgCreateMTL` |
+| Windows | DirectX 11 | `NANOVG_DX11_IMPLEMENTATION` | `nanovg_dx11.h` | `nvgCreateDX11` |
+| Linux/Windows | Vulkan | (link-time) | `nanovg_vk.h` | `nvgCreateVk` |
+
+#### rlgl backend
+
+The **rlgl** backend (`nanovg_rlgl.h`) uses raylib's `rlgl.h` as GL abstraction.
+It avoids raw GL calls and works on Desktop GL 3.3 *and* GLES 2/3 from a single
+codebase. To select the GL version, define one of these *before* including
+`mulle-rlgl.h` or `nanovg_rlgl.h`:
+
+```c
+#define GRAPHICS_API_OPENGL_33   // Desktop GL 3.3 core — needs rlLoadExtensions()
+#define GRAPHICS_API_OPENGL_ES3  // GLES 3.0 — no extension loading needed
+#define GRAPHICS_API_OPENGL_ES2  // GLES 2.0 — no extension loading needed
+```
+
+Desktop GL requires loading function pointers after the context is created:
+
+```c
+#define GRAPHICS_API_OPENGL_33
+#define RLGL_IMPLEMENTATION
+#include <mulle-rlgl.h>
+
+// after glfwMakeContextCurrent(window):
+rlLoadExtensions((void *)glfwGetProcAddress);
+rlglInit(width, height);
+```
+
+GLES contexts (EGL) link GL functions at build time, so only `rlglInit` is needed:
+
+```c
+#define GRAPHICS_API_OPENGL_ES3
+#define RLGL_IMPLEMENTATION
+#include <mulle-rlgl.h>
+
+// after glfwMakeContextCurrent(window):
+rlglInit(width, height);
+```
+
+#### Platform recommendations
+
+| Platform | Recommended backend | Notes |
+|----------|-------------------|-------|
+| Linux (X11/Wayland) | rlgl (GLES3 or GL3.3) | GLES3 via EGL works on nvidia+mesa; GL3.3 for desktop GPUs |
+| macOS | Metal | Best performance, required on Apple Silicon |
+| Windows | rlgl (GL3.3) or DX11 | rlgl for portability, DX11 for native Windows integration |
+| Raspberry Pi | rlgl (GLES2) | Use `GRAPHICS_API_OPENGL_ES2` |
+| iOS | Metal | Only supported path |
+

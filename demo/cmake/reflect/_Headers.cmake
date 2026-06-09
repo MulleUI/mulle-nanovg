@@ -16,6 +16,7 @@ src/generic
 src
 ../src/reflect
 ../src/d3d11_shaders
+../src/external
 ../src
 ../src/mnvg_bitcode
 )
@@ -70,6 +71,7 @@ set( PUBLIC_HEADERS
 ../src/d3d11_shaders/D3D11VertexShader.h
 src/demo.h
 src/demo-version.h
+../src/external/glad.h
 ../src/fontstash.h
 src/main-linux-gl-fbo.h
 ../src/mnvg_bitcode/ios.h
@@ -77,15 +79,19 @@ src/main-linux-gl-fbo.h
 ../src/mnvg_bitcode/simulator.h
 ../src/mnvg_bitcode/tvos.h
 ../src/mulle-nanovg.h
+../src/mulle-rlgl.h
 ../src/nanovg_d3d11.h
 ../src/nanovg-framebuffer.h
 ../src/nanovg_gl.h
 ../src/nanovg_gl_utils.h
 ../src/nanovg.h
 ../src/nanovg_mtl.h
+../src/nanovg_rlgl.h
+../src/nanovg_rlgl_utils.h
 ../src/nanovg-trace-functions.h
 ../src/nanovg_vk.h
 ../src/nanovg_vk_utils.h
+../src/rlgl.h
 ../src/stb_image.h
 src/stb_image_write.h
 ../src/stb_truetype.h

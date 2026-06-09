@@ -8,12 +8,13 @@
       name="mulle-nanovg";
       user="MulleUI";
       repo="mulle-nanovg";
-      homepage="https://github.com/MulleUI/mulle-nanovg";
+      homepage="https://github.com/panaflexx/nanovg-emoji";
       license="UNLICENSED";
    };
    dependencies =
    (
       {
+         description="⌨️ mulle-freetype is a mulle-sde convenience";
          domain="github";
          name="mulle-freetype";
          repo="mulle-freetype";
