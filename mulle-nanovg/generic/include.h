@@ -25,46 +25,34 @@
 
 #include "_mulle-nanovg-include.h"
 
-// nanovg.h functions — exported from mulle-nanovg
+// this is for WIN32: specify global non-inlined functions and variables
+// like this (can not be declared inside functions!)
+//
+// .h:
+// #include "include.h"
+// MULLE__NANOVG_GLOBAL char *   aGlobalString;
+// MULLE__NANOVG_GLOBAL void     aGlobalFunction( void);
+//
+// .c:
+// #include "include-private.h"
+// MULLE__NANOVG_GLOBAL_VAR
+// char *  aGlobalString = "VfL Bochum 1848";
+// MULLE__NANOVG_GLOBAL
+// void   aGlobalFunction( void) {}
+//
 #ifndef MULLE__NANOVG_GLOBAL
 # ifdef MULLE__NANOVG_BUILD
-#  ifdef MULLE_C_GLOBAL
-#   define MULLE__NANOVG_GLOBAL    MULLE_C_GLOBAL
-#  elif defined( _WIN32)
-#   define MULLE__NANOVG_GLOBAL    extern __declspec( dllexport)
-#  else
-#   define MULLE__NANOVG_GLOBAL    extern
-#  endif
+#  define MULLE__NANOVG_GLOBAL       MULLE_C_GLOBAL
+#  define MULLE__NANOVG_GLOBAL_VAR   MULLE_C_GLOBAL
 # else
-#  ifdef MULLE_C_EXTERN_GLOBAL
-#   define MULLE__NANOVG_GLOBAL    MULLE_C_EXTERN_GLOBAL
-#  elif defined( _WIN32)
-#   define MULLE__NANOVG_GLOBAL    extern __declspec( dllimport)
+#  if defined( MULLE__NANOVG_INCLUDE_DYNAMIC) || (defined( MULLE_INCLUDE_DYNAMIC) && ! defined( MULLE__NANOVG_INCLUDE_STATIC))
+#   define MULLE__NANOVG_GLOBAL      MULLE_C_GLOBAL
 #  else
-#   define MULLE__NANOVG_GLOBAL    extern
+#   define MULLE__NANOVG_GLOBAL      extern
 #  endif
 # endif
+# define MULLE__NANOVG_GLOBAL_VAR    MULLE_C_GLOBAL
 #endif
-
-// nanovg_gl.h functions — exported from MulleCGNanoVG_GL (not mulle-nanovg)
-#ifndef MULLE__NANOVG_GL_GLOBAL
-# ifdef MULLE__NANOVG_GL_BUILD
-#  ifdef MULLE_C_GLOBAL
-#   define MULLE__NANOVG_GL_GLOBAL    MULLE_C_GLOBAL
-#  elif defined( _WIN32)
-#   define MULLE__NANOVG_GL_GLOBAL    extern __declspec( dllexport)
-#  else
-#   define MULLE__NANOVG_GL_GLOBAL    extern
-#  endif
-# else
-#  ifdef MULLE_C_EXTERN_GLOBAL
-#   define MULLE__NANOVG_GL_GLOBAL    MULLE_C_EXTERN_GLOBAL
-#  elif defined( _WIN32)
-#   define MULLE__NANOVG_GL_GLOBAL    extern __declspec( dllimport)
-#  else
-#   define MULLE__NANOVG_GL_GLOBAL    extern
-#  endif
-# endif
-#endif
+/* You can add some more include statements here */
 
 #endif

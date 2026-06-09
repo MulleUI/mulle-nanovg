@@ -32,12 +32,18 @@ export PROJECT_DIALECT="c"
 #
 #
 #
-export PROJECT_EXTENSIONS="c:m"
+export PROJECT_EXTENSIONS="c"
 
 
 #
 #
 #
-export PROJECT_ASSET_DIR="asset"
+export PROJECT_ASSET_DIR="DEFAULT"
+
+
+#
+#
+#
+export TEST_PROJECT_NAME="mulle-nanovg"
 
 
