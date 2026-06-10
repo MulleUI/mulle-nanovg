@@ -1,4 +1,3 @@
-craftinfo-all;local;no-delete,no-header,no-link,no-share,no-subproject,no-update;82F34E0F-CC5D-496A-984C-C58FBE8A5527;;;;;
 src/stb_truetype.h;file;no-all-load,no-build,no-header,no-import,no-link,no-readwrite,no-share;A9947A92-82C2-4C26-8B5D-B7B73C5FCB49;https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_truetype.h;;;;
 src/stb_image.h;file;no-all-load,no-build,no-header,no-import,no-link,no-readwrite,no-share;5DDEB09D-E15F-4505-B13A-C4C7655E7BAA;https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_image.h;;;;
 mulle-freetype;${MULLE__FREETYPE_NODETYPE:-git};no-all-load,no-cmake-loader,no-cmake-searchpath,no-import;9B44D879-8E6C-49D9-A09E-86998C13B49A;${MULLE__FREETYPE_URL:-https://github.com/MulleUI/mulle-freetype.git};${MULLE__FREETYPE_BRANCH};${MULLE__FREETYPE_TAG};;
