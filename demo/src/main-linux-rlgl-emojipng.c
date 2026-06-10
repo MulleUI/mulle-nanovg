@@ -52,9 +52,9 @@ int main(void)
    if( !vg)
       return( -1);
 
-   font = nvgCreateFont( vg, "sans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+   font = nvgCreateFont( vg, "sans", "Roboto-Regular.ttf");
    printf( "font=%d\n", font);
-   emojiFont = nvgCreateFont( vg, "emoji", "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf");
+   emojiFont = nvgCreateFont( vg, "emoji", "NotoColorEmoji.ttf");
    printf( "emojiFont=%d\n", emojiFont);
    if( emojiFont >= 0)
       nvgSetEmojiFontId( vg, emojiFont);
@@ -72,7 +72,8 @@ int main(void)
 
    nvgFontSize( vg, 36.0f);
    nvgFontFace( vg, "sans");
-   nvgFillColor( vg, nvgRGBA( 255, 255, 255, 255));
+   nvgTextColor( vg, nvgRGBA( 255, 255, 255, 255));
+   nvgTextBackgroundColor( vg, nvgRGBA( 51, 51, 77, 255));
    nvgText( vg, 30, 80, "Hello World!", NULL);
    nvgText( vg, 30, 140, "Emoji: \xF0\x9F\x98\x80 \xF0\x9F\x8E\x89", NULL);
 

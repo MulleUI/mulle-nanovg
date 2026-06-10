@@ -45,21 +45,21 @@ int main( void)
    rlLoadExtensions( (void *) glfwGetProcAddress);
    rlglInit( 800, 600);
 
-   vg = nvgCreateRLGL( NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_EMOJI);
+   vg = nvgCreateRLGL( NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_EMOJI | NVG_CLEARTYPE);
    if( vg == NULL)
    {
       printf( "Could not init nanovg.\n");
       return( -1);
    }
 
-   font = nvgCreateFont( vg, "sans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+   font = nvgCreateFont( vg, "sans", "Roboto-Regular.ttf");
    if( font == -1)
    {
       printf( "Could not load sans font.\n");
       return( -1);
    }
 
-   emojiFont = nvgCreateFont( vg, "emoji", "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf");
+   emojiFont = nvgCreateFont( vg, "emoji", "NotoColorEmoji.ttf");
    if( emojiFont == -1)
    {
       printf( "Could not load emoji font.\n");
@@ -109,6 +109,14 @@ int main( void)
 
       nvgFontSize( vg, 48.0f);
       nvgText( vg, 400, 350, "48px: \xF0\x9F\x98\x80", NULL);
+
+      // ClearType section
+      nvgClearType( vg, 1);
+      nvgTextBackgroundColor( vg, nvgRGBAf( 0.2f, 0.2f, 0.2f, 1.0f));
+      nvgFontSize( vg, 36.0f);
+      nvgTextColor( vg, nvgRGBA( 200, 220, 255, 255));
+      nvgText( vg, 50, 420, "ClearType: Hello \xF0\x9F\x98\x80 World!", NULL);
+      nvgClearType( vg, 0);
 
       nvgEndFrame( vg);
 

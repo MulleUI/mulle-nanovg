@@ -47,14 +47,14 @@ int main(void)
    if( !vg)
       return( -1);
 
-   font = nvgCreateFont( vg, "sans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+   font = nvgCreateFont( vg, "sans", "Roboto-Regular.ttf");
    printf( "font=%d\n", font);
    if( font < 0)
       return( -1);
 
    {
       int emojiFont;
-      emojiFont = nvgCreateFont( vg, "emoji", "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf");
+      emojiFont = nvgCreateFont( vg, "emoji", "NotoColorEmoji.ttf");
       printf( "emojiFont=%d\n", emojiFont);
       if( emojiFont >= 0)
          nvgSetEmojiFontId( vg, emojiFont);

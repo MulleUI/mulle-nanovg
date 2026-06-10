@@ -3439,6 +3439,7 @@ static void nvg__renderText(NVGcontext* ctx, NVGvertex* verts, int nverts)
 	paint.outerColor.a *= state->alpha;
 
 	paint.clearType = state->clearType;
+	paint.isEmoji   = 0;
 	ctx->params.renderTriangles(ctx->params.userPtr, &paint, state->compositeOperation, &state->scissor, verts, nverts, ctx->fringeWidth);
 
 	ctx->drawCallCount++;
