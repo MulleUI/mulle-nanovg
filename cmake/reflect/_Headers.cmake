@@ -79,6 +79,7 @@ mulle-nanovg/reflect/_mulle-nanovg-include.h
 mulle-nanovg/reflect/_mulle-nanovg-provide.h
 mulle-nanovg/rlgl.h
 mulle-nanovg/stb_image.h
+mulle-nanovg/stb_image_resize2.h
 mulle-nanovg/stb_truetype.h
 )
 

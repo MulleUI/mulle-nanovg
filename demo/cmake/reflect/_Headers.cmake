@@ -93,6 +93,7 @@ src/main-linux-gl-fbo.h
 ../src/nanovg_vk_utils.h
 ../src/rlgl.h
 ../src/stb_image.h
+../src/stb_image_resize2.h
 src/stb_image_write.h
 ../src/stb_truetype.h
 src/vulkan_util.h

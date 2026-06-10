@@ -80,7 +80,8 @@ enum NVGcreateFlags {
    NVG_FONT_ONLY       = 1<<4,
    NVG_CLEARTYPE       = 1<<5,
    NVG_MSAA            = 1<<6,
-   NVG_NO_DRAWING      = 1<<7
+   NVG_NO_DRAWING      = 1<<7,
+   NVG_EMOJI           = 1<<8
 };
 #endif
 
@@ -101,7 +102,8 @@ enum RLGLNVGshaderType {
    RLNSVG_SHADER_FILLIMG   = 1,
    RLNSVG_SHADER_SIMPLE    = 2,
    RLNSVG_SHADER_IMG       = 3,
-   RLNSVG_SHADER_CLEARTYPE = 4
+   RLNSVG_SHADER_CLEARTYPE = 4,
+   RLNSVG_SHADER_EMOJI    = 5
 };
 
 // Uniform array size (non-UBO path)
@@ -502,6 +504,13 @@ static const char *rlglnvg__fragShader =
    "      result.xyz = color.xyz * innerCol.xyz + ( vec3( innerCol.w ) - color.xyz ) * outerCol.xyz;\n"
    "      result.w = innerCol.w;\n"
    "      result *= scissor;\n"
+   "   } else if (type == 5) {\n"
+   "#ifdef NANOVG_GL3\n"
+   "      vec4 color = texture(tex, ftcoord);\n"
+   "#else\n"
+   "      vec4 color = texture2D(tex, ftcoord);\n"
+   "#endif\n"
+   "      result = color * scissor * innerCol.a;\n"
    "   }\n"
    "#ifdef NANOVG_GL3\n"
    "   outColor = result;\n"
@@ -1375,7 +1384,9 @@ static void rlglnvg__renderTriangles(void* uptr, NVGpaint* paint, NVGcompositeOp
    if( call->uniformOffset == -1) goto error;
    frag = rlglnvg__fragUniformPtr( gl, call->uniformOffset);
    rlglnvg__convertPaint( gl, frag, paint, scissor, 1.0f, fringe, -1.0f);
-   frag->type = (paint->clearType) ? RLNSVG_SHADER_CLEARTYPE : RLNSVG_SHADER_IMG;
+   frag->type = paint->isEmoji ? RLNSVG_SHADER_EMOJI
+              : paint->clearType ? RLNSVG_SHADER_CLEARTYPE
+              : RLNSVG_SHADER_IMG;
    return;
 
 error:
@@ -1471,6 +1482,7 @@ NVGcontext* nvgCreateRLGL(int flags)
 
    params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
    params.clearType     = flags & NVG_CLEARTYPE ? 1 : 0;
+   params.emoji         = flags & NVG_EMOJI ? 1 : 0;
 
    ctx = nvgCreateInternal( &params);
    if( ctx == NULL)

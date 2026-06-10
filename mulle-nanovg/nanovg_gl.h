@@ -77,7 +77,9 @@ enum NVGcreateFlags {
 	// Enable MSAA (if this is set, then NVG_ANTIALIAS should not be set)
 	NVG_MSAA          = 1<<6,
 	// Disable actual rendering, use dummy backend for tracing/testing only
-	NVG_NO_DRAWING    = 1<<7
+	NVG_NO_DRAWING    = 1<<7,
+	// Enable color emoji support (creates RGBA atlas)
+	NVG_EMOJI         = 1<<8
 };
 
 #if defined NANOVG_GL2_IMPLEMENTATION
@@ -194,7 +196,8 @@ enum GLNVGshaderType {
 	NSVG_SHADER_FILLIMG   = 1,
 	NSVG_SHADER_SIMPLE    = 2,
 	NSVG_SHADER_IMG       = 3,
-	NSVG_SHADER_CLEARTYPE = 4  // Only used when NANOVG_CLEARTYPE is defined
+	NSVG_SHADER_CLEARTYPE = 4,  // Only used when NANOVG_CLEARTYPE is defined
+	NSVG_SHADER_EMOJI     = 5   // Color emoji (premultiplied RGBA from atlas)
 };
 
 #if NANOVG_GL_USE_UNIFORMBUFFER
@@ -809,6 +812,15 @@ static int glnvg__renderCreate(void* uptr)
 		"     result.xyz = color.xyz * innerCol.xyz + ( vec3( innerCol.w ) - color.xyz ) * outerCol.xyz;\n"
 		"     result.w = innerCol.w;\n"
 		"     result *= scissor;\n"
+		"  }\n"
+		"  else if ( type == 5 )      // NSVG_SHADER_EMOJI\n"
+		"  {\n"
+		"#ifdef NANOVG_GL3\n"
+		"     vec4 color = texture(tex, ftcoord);\n"
+		"#else\n"
+		"     vec4 color = texture2D(tex, ftcoord);\n"
+		"#endif\n"
+		"     result = color * scissor * innerCol.a;\n"
 		"  }\n"
 		"#ifdef NANOVG_GL3\n"
 		"	outColor = result;\n"
@@ -1827,7 +1839,9 @@ static void glnvg__renderTriangles(void* uptr, NVGpaint* paint, NVGcompositeOper
 	if (call->uniformOffset == -1) goto error;
 	frag = nvg__fragUniformPtr(gl, call->uniformOffset);
 	glnvg__convertPaint(gl, frag, paint, scissor, 1.0f, fringe, -1.0f);
-	frag->type = (paint->clearType) ? NSVG_SHADER_CLEARTYPE : NSVG_SHADER_IMG;
+	frag->type = paint->isEmoji ? NSVG_SHADER_EMOJI
+	           : paint->clearType ? NSVG_SHADER_CLEARTYPE
+	           : NSVG_SHADER_IMG;
 	return;
 
 error:
@@ -2118,6 +2132,7 @@ NVGcontext* nvgCreateGLES3(int flags)
 	}
 	params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
 	params.clearType     = flags & NVG_CLEARTYPE ? 1 : 0;
+	params.emoji         = flags & NVG_EMOJI ? 1 : 0;
 
 	ctx = nvgCreateInternal(&params);
 	if (ctx == NULL) goto error;

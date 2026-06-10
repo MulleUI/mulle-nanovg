@@ -159,6 +159,7 @@ struct NVGcontext {
 	int strokeTriCount;
 	int textTriCount;
 	int pathOnly;
+	int emojiFontId;
 	int nstates;
 	FILE *trace;
 	char *traceName;
@@ -429,6 +430,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 	memset(ctx, 0, sizeof(NVGcontext));
 
 	ctx->params = *params;
+	ctx->emojiFontId = FONS_INVALID;
 
 	// font context does not do commands or need a cache
 	if( ctx->params.contextType != NVG_FONT_CONTEXT)
@@ -458,7 +460,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 		if (ctx->params.renderCreate(ctx->params.userPtr) == 0) { fprintf(stderr, "nvgCreateInternal: renderCreate failed\n"); goto error; }
 
 	// Init font rendering
-	for( i = 0; i < (params->clearType ? 2 : 1); i++)
+	for( i = 0; i < ((params->clearType || params->emoji) ? 2 : 1); i++)
 	{
 		fctx = &ctx->fontContexts[ i];
 
@@ -3046,23 +3048,30 @@ void nvgStroke(NVGcontext* ctx)
 static int nvg__createFont(NVGcontext* ctx, const char* name, const char* filename, const int fontIndex)
 {
 	int  handle[ 2];
+	int  i;
 
 	handle[ 0] = fonsAddFont(ctx->fontContexts[ 0].fs, name, filename, fontIndex);
 	if( handle[ 0] == FONS_INVALID)
 		return( -1);
 
-	if( ! ctx->fontContexts[ 1].fs)
-		return( handle[ 0]);
-
-	handle[ 1] = fonsAddFont(ctx->fontContexts[ 1].fs, name, filename, fontIndex);
-	if( handle[ 1] != handle[ 0])
+	if( ctx->fontContexts[ 1].fs)
 	{
-		// if the font handles differ, our assumptions fails, so we just
-		// use gray for everything
-		nvg__deleteFontContext( ctx, 1);
-		fprintf( stderr, "Font \"%s\" (%s) forced degradation to non-ClearType\n",
-						name ? name : "???",
-						filename ? filename  : "");
+		handle[ 1] = fonsAddFont(ctx->fontContexts[ 1].fs, name, filename, fontIndex);
+		if( handle[ 1] != handle[ 0])
+		{
+			nvg__deleteFontContext( ctx, 1);
+			fprintf( stderr, "Font \"%s\" (%s) forced degradation to non-ClearType\n",
+							name ? name : "???",
+							filename ? filename  : "");
+		}
+	}
+
+	// Auto-add emoji fallback to new font
+	if( ctx->emojiFontId != FONS_INVALID && handle[ 0] != ctx->emojiFontId)
+	{
+		for( i = 0; i < 2; i++)
+			if( ctx->fontContexts[i].fs)
+				fonsAddFallbackFont( ctx->fontContexts[i].fs, handle[ 0], ctx->emojiFontId);
 	}
 	return( handle[ 0]);
 }
@@ -3093,21 +3102,28 @@ int nvgCreateFontAtIndex(NVGcontext* ctx, const char* name, const char* filename
 static int nvg__createFontMem(NVGcontext* ctx, const char* name, unsigned char* data, int ndata, int freeData, int fontIndex)
 {
 	int  handle[ 2];
+	int  i;
 
 	handle[ 0] = fonsAddFontMem(ctx->fontContexts[ 0].fs, name, data, ndata, freeData, fontIndex);
 	if( handle[ 0] == FONS_INVALID)
 		return( -1);
 
-	if( ! ctx->fontContexts[ 1].fs)
-		return( handle[ 0]);
-
-	handle[ 1] = fonsAddFontMem(ctx->fontContexts[ 1].fs, name, data, ndata, freeData, fontIndex);
-	if( handle[ 1] != handle[ 0])
+	if( ctx->fontContexts[ 1].fs)
 	{
-		// if the font handles differ, our assumptions fails, so we just
-		// use gray
-		assert( ! "can't load font as LCD for some reason (memory?)");
-		nvg__deleteFontContext( ctx, 1);
+		handle[ 1] = fonsAddFontMem(ctx->fontContexts[ 1].fs, name, data, ndata, freeData, fontIndex);
+		if( handle[ 1] != handle[ 0])
+		{
+			assert( ! "can't load font as LCD for some reason (memory?)");
+			nvg__deleteFontContext( ctx, 1);
+		}
+	}
+
+	// Auto-add emoji fallback to new font
+	if( ctx->emojiFontId != FONS_INVALID && handle[ 0] != ctx->emojiFontId)
+	{
+		for( i = 0; i < 2; i++)
+			if( ctx->fontContexts[i].fs)
+				fonsAddFallbackFont( ctx->fontContexts[i].fs, handle[ 0], ctx->emojiFontId);
 	}
 	return( handle[ 0]);
 }
@@ -3205,6 +3221,39 @@ void nvgResetFallbackFonts(NVGcontext* ctx, const char* baseFont)
 
 	nvgResetFallbackFontsId(ctx, nvgFindFont(ctx, baseFont));
 }
+
+
+int nvgSetEmojiFontId(NVGcontext* ctx, int fontId)
+{
+   int i, k, n;
+
+   if( fontId == FONS_INVALID)
+      return( 0);
+
+   ctx->emojiFontId = fontId;
+
+   // Add emoji as fallback to all existing fonts in both contexts
+   for( k = 0; k < 2; k++)
+   {
+      if( ! ctx->fontContexts[k].fs)
+         continue;
+      n = fonsGetNumFonts( ctx->fontContexts[k].fs);
+      for( i = 0; i < n; i++)
+      {
+         if( i == fontId)
+            continue;  // don't add emoji as its own fallback
+         fonsAddFallbackFont( ctx->fontContexts[k].fs, i, fontId);
+      }
+   }
+   return( 1);
+}
+
+
+int nvgSetEmojiFont(NVGcontext* ctx, const char* name)
+{
+   return( nvgSetEmojiFontId( ctx, nvgFindFont( ctx, name)));
+}
+
 
 // State setting
 void nvgFontSize(NVGcontext* ctx, float size)
@@ -3305,6 +3354,29 @@ static void nvg__flushTextTexture(NVGcontext* ctx)
 	}
 }
 
+
+static void nvg__flushEmojiTexture(NVGcontext* ctx)
+{
+	int dirty[4];
+	NVGfontContext *fctx;
+
+	fctx = &ctx->fontContexts[1];
+	if( ! fctx->fs)
+		return;
+	if (fonsValidateTexture(fctx->fs, dirty)) {
+		int fontImage = fctx->fontImages[fctx->fontImageIdx];
+		if (fontImage != 0) {
+			int iw, ih;
+			const unsigned char* data = fonsGetTextureData( fctx->fs, &iw, &ih);
+			int x = dirty[0];
+			int y = dirty[1];
+			int w = dirty[2] - dirty[0];
+			int h = dirty[3] - dirty[1];
+			ctx->params.renderUpdateTexture(ctx->params.userPtr, fontImage, x,y, w,h, data);
+		}
+	}
+}
+
 static int nvg__allocTextAtlas(NVGcontext* ctx)
 {
 	assert( ctx->params.contextType == NVG_FULL_CONTEXT);
@@ -3374,6 +3446,29 @@ static void nvg__renderText(NVGcontext* ctx, NVGvertex* verts, int nverts)
 }
 
 
+static void nvg__renderTextEmoji(NVGcontext* ctx, NVGvertex* verts, int nverts)
+{
+	NVGstate* state = nvg__getState(ctx);
+	NVGpaint paint = state->fill;
+	NVGfontContext *fctx;
+
+	assert( ctx->params.contextType == NVG_FULL_CONTEXT);
+
+	fctx = &ctx->fontContexts[1];
+	paint.image = fctx->fontImages[fctx->fontImageIdx];
+
+	paint.innerColor.a *= state->alpha;
+	paint.outerColor.a *= state->alpha;
+
+	paint.clearType = 0;
+	paint.isEmoji   = 1;
+	ctx->params.renderTriangles(ctx->params.userPtr, &paint, state->compositeOperation, &state->scissor, verts, nverts, ctx->fringeWidth);
+
+	ctx->drawCallCount++;
+	ctx->textTriCount += nverts/3;
+}
+
+
 float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char* end)
 {
 	nvgText_enter(ctx, x, y, string, end);
@@ -3389,6 +3484,7 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 	int cverts = 0;
 	int nverts = 0;
 	int isFlipped = nvg__isTransformFlipped(state->xform);
+	int hasColor = 0;
 	FONScontext *fs;
 
 	if (end == NULL)
@@ -3415,6 +3511,7 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 		return x;
 	}
 
+	// Pass 1: grayscale glyphs only, skip color glyphs
 	fonsTextIterInit(fs, &iter, x*scale, y*scale, string, end, FONS_GLYPH_BITMAP_REQUIRED);
 	prevIter = iter;
 	while (fonsTextIterNext(fs, &iter, &q)) {
@@ -3432,6 +3529,10 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 				break;
 		}
 		prevIter = iter;
+		if( iter.isColor) {
+			hasColor = 1;
+			continue;  // skip vertex emission, cursor already advanced
+		}
 		if(isFlipped) {
 			float tmp;
 
@@ -3458,6 +3559,58 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 	nvg__flushTextTexture(ctx);
 
 	nvg__renderText(ctx, verts, nverts);
+
+	// Pass 2: color emoji glyphs (if any and fontContexts[1] exists)
+	if( hasColor && ctx->fontContexts[1].fs)
+	{
+		FONScontext *efs;
+		int          enverts;
+
+		efs = ctx->fontContexts[1].fs;
+		fonsSetSize(efs, state->fontSize*scale);
+		fonsSetSpacing(efs, state->letterSpacing*scale);
+		fonsSetAlign(efs, state->textAlign);
+		fonsSetFont(efs, state->fontId);
+
+		enverts = 0;
+		fonsTextIterInit(efs, &iter, x*scale, y*scale, string, end, FONS_GLYPH_BITMAP_REQUIRED);
+		while (fonsTextIterNext(efs, &iter, &q)) {
+			float c[4*2];
+			if (iter.prevGlyphIndex == -1) {
+				if (enverts != 0) {
+					nvg__renderTextEmoji(ctx, verts, enverts);
+					enverts = 0;
+				}
+				// TODO: allocate emoji atlas if full
+				break;
+			}
+			if( ! iter.isColor)
+				continue;  // skip grayscale glyphs in pass 2
+			if(isFlipped) {
+				float tmp;
+
+				tmp = q.y0; q.y0 = q.y1; q.y1 = tmp;
+				tmp = q.t0; q.t0 = q.t1; q.t1 = tmp;
+			}
+			nvgTransformPoint(&c[0],&c[1], state->xform, q.x0*invscale, q.y0*invscale);
+			nvgTransformPoint(&c[2],&c[3], state->xform, q.x1*invscale, q.y0*invscale);
+			nvgTransformPoint(&c[4],&c[5], state->xform, q.x1*invscale, q.y1*invscale);
+			nvgTransformPoint(&c[6],&c[7], state->xform, q.x0*invscale, q.y1*invscale);
+			if (enverts+6 <= cverts) {
+				nvg__vset(&verts[enverts], c[0], c[1], q.s0, q.t0); enverts++;
+				nvg__vset(&verts[enverts], c[4], c[5], q.s1, q.t1); enverts++;
+				nvg__vset(&verts[enverts], c[2], c[3], q.s1, q.t0); enverts++;
+				nvg__vset(&verts[enverts], c[0], c[1], q.s0, q.t0); enverts++;
+				nvg__vset(&verts[enverts], c[6], c[7], q.s0, q.t1); enverts++;
+				nvg__vset(&verts[enverts], c[4], c[5], q.s1, q.t1); enverts++;
+			}
+		}
+		if( enverts > 0)
+		{
+			nvg__flushEmojiTexture(ctx);
+			nvg__renderTextEmoji(ctx, verts, enverts);
+		}
+	}
 
 	float result = iter.nextx / scale;
 	nvgText_leave(ctx, x, y, string, end, result);

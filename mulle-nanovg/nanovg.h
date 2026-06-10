@@ -71,6 +71,7 @@ struct NVGpaint {
 	NVGcolor outerColor;
 	int image;
 	int clearType;
+	int isEmoji;
 };
 typedef struct NVGpaint NVGpaint;
 
@@ -756,6 +757,14 @@ void nvgResetFallbackFontsId(NVGcontext* ctx, int baseFont);
 MULLE__NANOVG_GLOBAL
 void nvgResetFallbackFonts(NVGcontext* ctx, const char* baseFont);
 
+// Sets the emoji font by id. Emoji glyphs are rendered in color.
+MULLE__NANOVG_GLOBAL
+int nvgSetEmojiFontId(NVGcontext* ctx, int fontId);
+
+// Sets the emoji font by name.
+MULLE__NANOVG_GLOBAL
+int nvgSetEmojiFont(NVGcontext* ctx, const char* name);
+
 // Sets the font size of current text style.
 MULLE__NANOVG_GLOBAL
 void nvgFontSize(NVGcontext* ctx, float size);
@@ -913,6 +922,7 @@ struct NVGparams {
 	int edgeAntiAlias;
 // @mulle-nanovg@ >>
 	int clearType;
+	int emoji;
 	int cStates;
 	enum NVGcontextType   contextType;
 // @mulle-nanovg@ <<

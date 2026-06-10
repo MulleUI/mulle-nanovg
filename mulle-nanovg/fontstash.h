@@ -94,6 +94,7 @@ struct FONStextIter {
 	const char* end;
 	unsigned int utf8state;
 	int bitmapOption;
+	short isColor;
 };
 typedef struct FONStextIter FONStextIter;
 
@@ -115,6 +116,7 @@ int fonsResetAtlas(FONScontext* stash, int width, int height, int pixelsize);
 int fonsAddFont(FONScontext* s, const char* name, const char* path, int fontIndex);
 int fonsAddFontMem(FONScontext* s, const char* name, unsigned char* data, int ndata, int freeData, int fontIndex);
 int fonsGetFontByName(FONScontext* s, const char* name);
+int fonsGetNumFonts(FONScontext* s);
 
 // State handling
 void fonsPushState(FONScontext* s);
@@ -172,6 +174,11 @@ void* fonsGetFontHandle(FONScontext* s, int fontId);
 # endif
 # include FT_LCD_FILTER_H
 #endif
+
+#ifndef NVG_NO_STB_IMAGE_RESIZE_IMPLEMENTATION
+# define STB_IMAGE_RESIZE_IMPLEMENTATION
+#endif
+#include <stb_image_resize2.h>
 
 
 struct FONSttFontImpl {
@@ -251,6 +258,7 @@ struct FONSglyph
 	short size, blur;
 	short x0,y0,x1,y1;
 	short xadv,xoff,yoff;
+	short isColor;
 };
 typedef struct FONSglyph FONSglyph;
 
@@ -380,6 +388,8 @@ void fons__tt_getFontVMetrics(FONSttFontImpl *font, int *ascent, int *descent, i
 
 float fons__tt_getPixelHeightScale(FONSttFontImpl *font, float size)
 {
+	if( font->font->units_per_EM == 0)
+		return( 1.0f);
 	return size / font->font->units_per_EM;
 }
 
@@ -399,16 +409,40 @@ int fons__tt_buildGlyphBitmap(FONSttFontImpl *font, int glyph, float size, float
 	FONS_NOTUSED(scale);
 
 	ftError = FT_Set_Pixel_Sizes(font->font, 0, size);
-	if (ftError) return 0;
+	if (ftError)
+	{
+		// Bitmap-only fonts (e.g. NotoColorEmoji) don't support arbitrary sizes
+		if( font->font->num_fixed_sizes > 0)
+			ftError = FT_Select_Size(font->font, 0);
+		if (ftError) return 0;
+	}
+	// For bitmap-only color fonts, always select a fixed strike
+	// FT_Set_Pixel_Sizes may "succeed" but not produce BGRA glyphs
+	else if( FT_HAS_COLOR(font->font) && font->font->num_fixed_sizes > 0
+	         && !FT_IS_SCALABLE(font->font))
+	{
+		FT_Select_Size(font->font, 0);
+	}
 	ftGlyphRenderFlags = font->ftGlyphRenderFlags;
 	if (bitmapOption == FONS_GLYPH_BITMAP_REQUIRED)
 		ftGlyphRenderFlags |= FT_LOAD_RENDER;
+	if( FT_HAS_COLOR(font->font))
+		ftGlyphRenderFlags |= FT_LOAD_COLOR;
 	ftError = FT_Load_Glyph(font->font, glyph, ftGlyphRenderFlags);
 	if (ftError) return 0;
-	ftError = FT_Get_Advance(font->font, glyph, FT_LOAD_NO_SCALE, &advFixed);
-	if (ftError) return 0;
 	ftGlyph = font->font->glyph;
-	*advance = (int)advFixed;
+	// For bitmap-only fonts, get pixel advance from glyph slot (26.6 fixed point)
+	// For scalable fonts, use FT_Get_Advance with NO_SCALE (font units)
+	if( !FT_IS_SCALABLE(font->font))
+	{
+		*advance = (int)(ftGlyph->advance.x >> 6);
+	}
+	else
+	{
+		ftError = FT_Get_Advance(font->font, glyph, FT_LOAD_NO_SCALE, &advFixed);
+		if (ftError) return 0;
+		*advance = (int)advFixed;
+	}
 	*lsb = (int)ftGlyph->metrics.horiBearingX;
 	*x0 = ftGlyph->bitmap_left;
 
@@ -602,6 +636,44 @@ void fons__tt_renderGlyphBitmap(FONSttFontImpl *font, unsigned char *output, int
 {
    FT_GlyphSlot ftGlyph = font->font->glyph;
 
+   // Color emoji (BGRA from FreeType) — write as RGBA into RGBA atlas
+   if( ftGlyph->bitmap.pixel_mode == FT_PIXEL_MODE_BGRA)
+   {
+      unsigned int x, y;
+      unsigned int srcW, srcH;
+      unsigned int dstW, dstH;
+      unsigned char *swizzled;
+
+      srcW = ftGlyph->bitmap.width;
+      srcH = ftGlyph->bitmap.rows;
+      dstW = (unsigned int) outWidth;
+      dstH = (unsigned int) outHeight;
+
+      // BGRA -> RGBA swizzle into temp buffer
+      swizzled = (unsigned char *) malloc( srcW * srcH * 4);
+      for( y = 0; y < srcH; y++)
+      {
+         unsigned char *src = ftGlyph->bitmap.buffer + y * ftGlyph->bitmap.pitch;
+         unsigned char *dst = swizzled + y * srcW * 4;
+         for( x = 0; x < srcW; x++)
+         {
+            dst[0] = src[2];
+            dst[1] = src[1];
+            dst[2] = src[0];
+            dst[3] = src[3];
+            src += 4;
+            dst += 4;
+         }
+      }
+
+      // Resize with high-quality filter (premultiplied RGBA)
+      stbir_resize_uint8_linear( swizzled, srcW, srcH, srcW * 4,
+                                 output, dstW, dstH, outStride,
+                                 STBIR_RGBA_PM);
+      free( swizzled);
+      return;
+   }
+
    // cleartype code
    if( (font->ftGlyphRenderFlags & FT_LOAD_TARGET_( 0xF)) == FT_LOAD_TARGET_LCD)
    {
@@ -628,7 +700,8 @@ void fons__tt_renderGlyphBitmap(FONSttFontImpl *font, unsigned char *output, int
       int ftGlyphOffset = 0;
       unsigned int x, y;
 
-      assert( ftGlyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY);
+      assert( ftGlyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY
+           || ftGlyph->bitmap.rows == 0);
 
       for ( y = 0; y < ftGlyph->bitmap.rows; y++ ) {
          for ( x = 0; x < ftGlyph->bitmap.width; x++ ) {
@@ -659,6 +732,16 @@ void fons__tt_setGlyphRenderFlags(FONSttFontImpl *font, int flags)
 void* fons__tt_getFontHandle(FONSttFontImpl *font)
 {
    return( (void *) font->font);
+}
+
+int fons__tt_isColorGlyph(FONSttFontImpl *font)
+{
+   return( font->font->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_BGRA);
+}
+
+int fons__tt_isColorFont(FONSttFontImpl *font)
+{
+   return( FT_HAS_COLOR(font->font));
 }
 
 #else
@@ -738,6 +821,18 @@ void fons__tt_setGlyphRenderFlags(FONSttFontImpl *font, int flags)
 void* fons__tt_getFontHandle(FONSttFontImpl *font)
 {
    return( &font->font);
+}
+
+int fons__tt_isColorGlyph(FONSttFontImpl *font)
+{
+   (void) font;
+   return( 0);
+}
+
+int fons__tt_isColorFont(FONSttFontImpl *font)
+{
+   (void) font;
+   return( 0);
 }
 
 #endif
@@ -1278,6 +1373,11 @@ int fonsGetFontByName(FONScontext* s, const char* name)
 	return FONS_INVALID;
 }
 
+int fonsGetNumFonts(FONScontext* s)
+{
+	return( s->nfonts);
+}
+
 
 static FONSglyph* fons__allocGlyph(FONSfont* font)
 {
@@ -1407,8 +1507,43 @@ static FONSglyph* fons__getGlyph(FONScontext* stash, FONSfont* font, unsigned in
 		// It is possible that we did not find a fallback glyph.
 		// In that case the glyph index 'g' is 0, and we'll proceed below and cache empty glyph.
 	}
+	// Prefer a color fallback over a monochrome primary glyph
+	// Only for emoji-range codepoints (avoid stealing space/punctuation)
+	else if( codepoint > 0x2000 && ! fons__tt_isColorFont(&font->font))
+	{
+		for (i = 0; i < font->nfallbacks; ++i) {
+			FONSfont* fallbackFont = stash->fonts[font->fallbacks[i]];
+			int fallbackIndex;
+			if( ! fons__tt_isColorFont(&fallbackFont->font))
+				continue;
+			fallbackIndex = fons__tt_getGlyphIndex(&fallbackFont->font, codepoint);
+			if (fallbackIndex != 0) {
+				g = fallbackIndex;
+				renderFont = fallbackFont;
+				break;
+			}
+		}
+	}
 	scale = fons__tt_getPixelHeightScale(&renderFont->font, size);
 	fons__tt_buildGlyphBitmap(&renderFont->font, g, size, scale, &advance, &lsb, &x0, &y0, &x1, &y1, bitmapOption);
+
+	// Scale color emoji bitmaps to match requested font size
+	if( fons__tt_isColorFont(&renderFont->font) && (y1 - y0) > 0)
+	{
+		float emojiScale = size / (float)(y1 - y0);
+		if( emojiScale < 1.0f)
+		{
+			int ow = x1 - x0;
+			int oh = y1 - y0;
+
+			x0 = (int)(x0 * emojiScale);
+			y0 = (int)(y0 * emojiScale);
+			x1 = x0 + (int)(ow * emojiScale + 0.5f);
+			y1 = y0 + (int)(oh * emojiScale + 0.5f);
+			advance = (int)(advance * emojiScale);
+		}
+	}
+
 	gw = x1-x0 + pad*2;
 	gh = y1-y0 + pad*2;
 
@@ -1448,12 +1583,24 @@ static FONSglyph* fons__getGlyph(FONScontext* stash, FONSfont* font, unsigned in
 	glyph->xadv = (short)(scale * advance * 10.0f);
 	glyph->xoff = (short)(x0 - pad);
 	glyph->yoff = (short)(y0 - pad);
+	glyph->isColor = (bitmapOption == FONS_GLYPH_BITMAP_REQUIRED)
+	               ? (short) fons__tt_isColorGlyph(&renderFont->font)
+	               : 0;
 
 	if (bitmapOption == FONS_GLYPH_BITMAP_OPTIONAL) {
 		return glyph;
 	}
 
 	// Rasterize
+	// Skip color glyph bitmap in grayscale atlas (would corrupt data)
+	if( glyph->isColor && stash->params.pixelsize == 1)
+	{
+		stash->dirtyRect[0] = fons__mini(stash->dirtyRect[0], glyph->x0);
+		stash->dirtyRect[1] = fons__mini(stash->dirtyRect[1], glyph->y0);
+		stash->dirtyRect[2] = fons__maxi(stash->dirtyRect[2], glyph->x1);
+		stash->dirtyRect[3] = fons__maxi(stash->dirtyRect[3], glyph->y1);
+		return glyph;
+	}
 	dst = &stash->texData[((glyph->x0+pad) + (glyph->y0+pad) * stash->params.width) * stash->params.pixelsize];
 	fons__tt_renderGlyphBitmap(&renderFont->font, dst, gw-pad*2,gh-pad*2, stash->params.bytewidth, scale, scale, g);
 
@@ -1733,6 +1880,7 @@ int fonsTextIterNext(FONScontext* stash, FONStextIter* iter, FONSquad* quad)
 		if (glyph != NULL)
 			fons__getQuad(stash, iter->font, iter->prevGlyphIndex, glyph, iter->scale, iter->spacing, &iter->nextx, &iter->nexty, quad);
 		iter->prevGlyphIndex = glyph != NULL ? glyph->index : -1;
+		iter->isColor = glyph != NULL ? glyph->isColor : 0;
 		break;
 	}
 	iter->next = str;
