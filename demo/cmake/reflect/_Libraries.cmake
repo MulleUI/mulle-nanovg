@@ -228,6 +228,105 @@ endif()
 
 
 #
+# Generated from sourcetree: 6C4C99CE-7EBD-4F99-A5CA-A24CA46F323A;harfbuzz;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;
+# Disable with : `mulle-sourcetree mark harfbuzz `
+# Disable for this platform: `mulle-sourcetree mark harfbuzz no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark harfbuzz no-cmake-sdk-<name>`
+#
+if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+   list( APPEND OS_SPECIFIC_LIBRARIES "harfbuzz")
+else()
+   if( NOT HARFBUZZ_LIBRARY)
+      find_library( HARFBUZZ_LIBRARY NAMES
+         harfbuzz
+      )
+      message( STATUS "HARFBUZZ_LIBRARY is ${HARFBUZZ_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( HARFBUZZ_LIBRARY)
+         #
+         # Add HARFBUZZ_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark harfbuzz no-cmake-add`
+         #
+         list( APPEND OS_SPECIFIC_LIBRARIES ${HARFBUZZ_LIBRARY})
+         # intentionally left blank
+      else()
+         # Disable with: `mulle-sourcetree mark harfbuzz no-require-link`
+         message( SEND_ERROR "HARFBUZZ_LIBRARY was not found in harfbuzz")
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: E1BF242C-47A1-4392-B3D9-C290D9EC7DFC;png;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update;
+# Disable with : `mulle-sourcetree mark png `
+# Disable for this platform: `mulle-sourcetree mark png no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark png no-cmake-sdk-<name>`
+#
+if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+   list( APPEND OS_SPECIFIC_LIBRARIES "png")
+else()
+   if( NOT PNG_LIBRARY)
+      find_library( PNG_LIBRARY NAMES
+         png
+      )
+      message( STATUS "PNG_LIBRARY is ${PNG_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( PNG_LIBRARY)
+         #
+         # Add PNG_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark png no-cmake-add`
+         #
+         list( APPEND OS_SPECIFIC_LIBRARIES ${PNG_LIBRARY})
+         # intentionally left blank
+      else()
+         # Disable with: `mulle-sourcetree mark png no-require-link`
+         message( SEND_ERROR "PNG_LIBRARY was not found in png")
+      endif()
+   endif()
+endif()
+
+
+#
+# Generated from sourcetree: 87322E32-3B7F-4AB4-A5B8-610C1FB1839E;z;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update;
+# Disable with : `mulle-sourcetree mark z `
+# Disable for this platform: `mulle-sourcetree mark z no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark z no-cmake-sdk-<name>`
+#
+if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+   list( APPEND OS_SPECIFIC_LIBRARIES "z")
+else()
+   if( NOT Z_LIBRARY)
+      find_library( Z_LIBRARY NAMES
+         z
+      )
+      message( STATUS "Z_LIBRARY is ${Z_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( Z_LIBRARY)
+         #
+         # Add Z_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark z no-cmake-add`
+         #
+         list( APPEND OS_SPECIFIC_LIBRARIES ${Z_LIBRARY})
+         # intentionally left blank
+      else()
+         # Disable with: `mulle-sourcetree mark z no-require-link`
+         message( SEND_ERROR "Z_LIBRARY was not found in z")
+      endif()
+   endif()
+endif()
+
+
+#
 # Generated from sourcetree: 6D5EB449-7D2A-42D1-9616-581ACBBEB2E7;Metal;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
 # Disable with : `mulle-sourcetree mark Metal `
 # Disable for this platform: `mulle-sourcetree mark Metal no-cmake-platform-${MULLE_UNAME}`

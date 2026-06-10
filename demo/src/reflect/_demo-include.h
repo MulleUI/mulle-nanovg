@@ -146,4 +146,34 @@
 //        (use `mulle-sourcetree-to-c --unames` to list known values)
 #include <mulle-freetype/mulle-freetype.h>   // mulle-freetype
 
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove png`
+// (Use E1BF242C-47A1-4392-B3D9-C290D9EC7DFC instead of png, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark png no-header`
+//    rename              : `mulle-sde dependency|library set png include whatever.h`
+//    reorder             : `mulle-sde dependency move png <up|down>`
+//    toggle objc         : `mulle-sde dependency mark png [no-]import`
+//    toggle public       : `mulle-sde dependency mark png [no-]public`
+//    toggle optional     : `mulle-sde dependency mark png [no-]require`
+//    remove for platform : `mulle-sde dependency mark png no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+#include <png.h>   // png
+
+// To remove the following dependency (headers and library) completely:
+//   `mulle-sde dependency remove z`
+// (Use 87322E32-3B7F-4AB4-A5B8-610C1FB1839E instead of z, if there are duplicate entries)
+//
+// You can tweak the following #include with these commands:
+//    remove #include: `mulle-sde dependency mark z no-header`
+//    rename              : `mulle-sde dependency|library set z include whatever.h`
+//    reorder             : `mulle-sde dependency move z <up|down>`
+//    toggle objc         : `mulle-sde dependency mark z [no-]import`
+//    toggle public       : `mulle-sde dependency mark z [no-]public`
+//    toggle optional     : `mulle-sde dependency mark z [no-]require`
+//    remove for platform : `mulle-sde dependency mark z no-platform-<uname>`
+//        (use `mulle-sourcetree-to-c --unames` to list known values)
+#include <z.h>   // z
+
 #endif
