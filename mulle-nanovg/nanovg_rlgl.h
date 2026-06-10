@@ -338,10 +338,8 @@ static void rlglnvg__blendFuncSeparate(RLGLNVGcontext* gl, const RLGLNVGblend* b
        gl->blendFunc.dstAlpha != blend->dstAlpha)
    {
       gl->blendFunc = *blend;
-      rlSetBlendMode( RL_BLEND_CUSTOM_SEPARATE);
-      rlSetBlendFactorsSeparate( blend->srcRGB, blend->dstRGB,
-                                 blend->srcAlpha, blend->dstAlpha,
-                                 RL_FUNC_ADD, RL_FUNC_ADD);
+      glBlendFuncSeparate( blend->srcRGB, blend->dstRGB,
+                           blend->srcAlpha, blend->dstAlpha);
    }
 }
 
@@ -872,8 +870,10 @@ static void rlglnvg__renderFlush(void* uptr)
 
    if( gl->ncalls > 0)
    {
-      // Flush rlgl internal batch state
+      // Flush rlgl internal batch state (before we take over GL state)
       rlDrawRenderBatchActive();
+
+      rlExternalRenderActive++;
 
       // Setup GL state
       rlEnableShader( gl->shaderProg);
@@ -934,6 +934,10 @@ static void rlglnvg__renderFlush(void* uptr)
       rlDisableBackfaceCulling();
       rlDisableShader();
       rlDisableTexture();
+
+      rlExternalRenderActive--;
+      if( rlExternalRenderActive < 0)
+         abort();
    }
 
    // Reset per-frame buffers

@@ -1142,6 +1142,7 @@ typedef struct rlglData {
 // Global Variables Definition
 //----------------------------------------------------------------------------------
 static bool isGpuReady = false;
+static int  rlExternalRenderActive = 0;  // nonzero when an external renderer (e.g. nanovg) owns GL state
 static double rlCullDistanceNear = RL_CULL_DISTANCE_NEAR;
 static double rlCullDistanceFar = RL_CULL_DISTANCE_FAR;
 
@@ -2985,6 +2986,12 @@ void rlUnloadRenderBatch(rlRenderBatch batch)
 void rlDrawRenderBatch(rlRenderBatch *batch)
 {
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
+    // Assert that no external renderer (nanovg) has GL state active.
+    // If this fires, you called an rlgl batch function (rlSetBlendMode,
+    // rlSetTexture, rlBegin, etc.) while nanovg owns the GL state.
+    // See RLGL-NANOVG-BLEND-PROBLEM.md for details.
+    if (rlExternalRenderActive) TRACELOG(RL_LOG_ERROR, "RLGL: rlDrawRenderBatch called while external renderer is active (nanovg flush in progress?)");
+
     // Update batch vertex buffers
     //------------------------------------------------------------------------------------------------------------
     // NOTE: If there is not vertex data, buffers doesn't need to be updated (vertexCount > 0)
