@@ -1126,3 +1126,8 @@ void _nvgGetScissor_leave( FILE *fp, char *ctxName, NVGscissor *scissor)
 {
    fprintf(fp, "nvgGetScissor( %s, %p) <- void\n", ctxName ? ctxName : "vg", scissor);
 }
+
+void _nvgTraceComment_enter(FILE *fp, char *ctxName, const char *text)
+{
+   fprintf(fp, "%s\n", text ? text : "");
+}

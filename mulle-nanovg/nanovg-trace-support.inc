@@ -1987,4 +1987,21 @@ static inline void nvgTextBreakLines_leave(NVGcontext* ctx, const char* string, 
 #define nvgTextBreakLines_leave( ctx, string, end, breakRowWidth, rows, maxRows, return_value)
 #endif
 
+// Tracing Utilities
+#ifndef NVG_TRACECODE_DISABLED
+static inline void nvgTraceComment_enter(NVGcontext* ctx, const char *text)
+{
+   FILE   *fp;
+
+   if( ! ctx)
+      return;
+   fp = ctx->trace;
+   if( ! fp)
+      return;
+   _nvgTraceComment_enter( fp, ctx->traceName, text);
+}
+#else
+#define nvgTraceComment_enter( ctx, text)
+#endif
+
 #endif // NANOVG_TRACE_SUPPORT_H

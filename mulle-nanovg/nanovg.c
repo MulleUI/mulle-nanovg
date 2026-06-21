@@ -911,12 +911,17 @@ FILE *nvgTrace( NVGcontext* ctx, FILE * fp)
    return( old);
 }
 
+void nvgTraceComment( NVGcontext* ctx, const char *text)
+{
+   nvgTraceComment_enter( ctx, text);
+}
+
 // @mulle-nanovg@ <<
 
 // State setting
 void nvgShapeAntiAlias(NVGcontext* ctx, int enabled)
 {
-  nvgShapeAntiAlias_enter(ctx, enabled);
+   nvgShapeAntiAlias_enter(ctx, enabled);
 	NOT_AVAILABLE_IN_FONT_CONTEXT( ctx);
 	NOT_AVAILABLE_IN_PATH_CONTEXT( ctx);
 
@@ -3505,6 +3510,22 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 	fonsSetAlign(fs, state->textAlign);
 	fonsSetFont(fs, state->fontId);
 
+	// ClearType: snap x to integer screen pixel after alignment
+	if( state->clearType && ! (state->textAlign & NVG_ALIGN_LEFT))
+	{
+	   float width = fonsTextBounds(fs, x*scale, y*scale, string, end, NULL);
+	   if( state->textAlign & NVG_ALIGN_CENTER)
+	      x -= (width * invscale) * 0.5f;
+	   else
+	      x -= width * invscale;
+	   {
+	      float sx = x * state->xform[0] + state->xform[4];
+	      sx = roundf( sx);
+	      x = (sx - state->xform[4]) / state->xform[0];
+	   }
+	   fonsSetAlign(fs, (state->textAlign & ~(NVG_ALIGN_CENTER|NVG_ALIGN_RIGHT)) | NVG_ALIGN_LEFT);
+	}
+
 	cverts = nvg__maxi(2, (int)(end - string)) * 6; // conservative estimate.
 	verts = nvg__allocTempVerts(ctx, cverts);
 	if (verts == NULL) {
@@ -3617,6 +3638,263 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 	nvgText_leave(ctx, x, y, string, end, result);
 	return result;
 }
+
+// @mulle-nanovg@ >>
+float nvgAttributedText(NVGcontext* ctx, float x, float y,
+                        const char* string, const char* end,
+                        struct NVGtextAttribute* attributes, int nAttributes)
+{
+	NOT_AVAILABLE_IN_FONT_CONTEXT( ctx);
+	NOT_AVAILABLE_IN_PATH_CONTEXT( ctx);
+
+	NVGstate* state = nvg__getState(ctx);
+	NVGvertex* verts;
+	FONSquad q;
+	float scale = nvg__getFontScale(state) * ctx->devicePxRatio;
+	float invscale = 1.0f / scale;
+	int cverts = 0;
+	int nverts = 0;
+	int isFlipped = nvg__isTransformFlipped(state->xform);
+	int hasColor = 0;
+	FONScontext *fs;
+	NVGcolor savedInner, savedOuter;
+	float cx, cy;
+
+	if( nAttributes <= 0 || attributes == NULL)
+		return x;
+
+	if( end == NULL)
+		end = string + strlen(string);
+
+	if( state->fontId == FONS_INVALID)
+		return x;
+
+	fs = ctx->fontContexts[ state->clearType].fs;
+
+	// Save original colors
+	savedInner = state->fill.innerColor;
+	savedOuter = state->fill.outerColor;
+
+	cverts = nvg__maxi(2, (int)(end - string)) * 6;
+	verts  = nvg__allocTempVerts(ctx, cverts);
+	if( verts == NULL)
+	{
+		state->fill.innerColor = savedInner;
+		state->fill.outerColor = savedOuter;
+		return x;
+	}
+
+	// Pass 1: grayscale glyphs with own iteration
+	{
+		const char     *str = string;
+		unsigned int   utf8state = 0;
+		unsigned int   codepoint = 0;
+		int            prevGlyphIndex = -1;
+		int            attrIdx = 0;
+		int            fontId;
+		float          fontSize;
+		FONSfont       *font;
+		short          isize;
+		float          fscale, spacing;
+		float          yOff;
+
+		// Set up initial attribute
+		state->fill.innerColor = attributes[0].textColor;
+		state->fill.outerColor = attributes[0].backgroundColor;
+		fontId   = attributes[0].fontId >= 0 ? attributes[0].fontId : state->fontId;
+		fontSize = attributes[0].fontSize > 0 ? attributes[0].fontSize : state->fontSize;
+		yOff     = attributes[0].yOffset * scale;
+		font     = fs->fonts[fontId];
+		isize    = (short)(fontSize * scale * 10.0f);
+		fscale   = fons__tt_getPixelHeightScale(&font->font, (float)isize / 10.0f);
+		spacing  = state->letterSpacing * scale;
+
+		// Compute initial y with vertical alignment
+		cy = (y * scale) + fons__getVertAlign(fs, font, state->textAlign, isize);
+		cx = x * scale;
+
+		for( ; str < end; str++)
+		{
+			if( fons__decutf8(&utf8state, &codepoint, *(const unsigned char*)str))
+				continue;
+
+			// Attribute boundary: str points to last byte of codepoint,
+			// attr->end points past last byte of run.
+			if( attrIdx < nAttributes - 1 && (str + 1) > attributes[attrIdx].end)
+			{
+				// Flush current run
+				if( nverts != 0)
+				{
+					nvg__flushTextTexture(ctx);
+					nvg__renderText(ctx, verts, nverts);
+					nverts = 0;
+				}
+				attrIdx++;
+				state->fill.innerColor = attributes[attrIdx].textColor;
+				state->fill.outerColor = attributes[attrIdx].backgroundColor;
+				fontId   = attributes[attrIdx].fontId >= 0 ? attributes[attrIdx].fontId : state->fontId;
+				fontSize = attributes[attrIdx].fontSize > 0 ? attributes[attrIdx].fontSize : state->fontSize;
+				yOff     = attributes[attrIdx].yOffset * scale;
+				font     = fs->fonts[fontId];
+				isize    = (short)(fontSize * scale * 10.0f);
+				fscale   = fons__tt_getPixelHeightScale(&font->font, (float)isize / 10.0f);
+				prevGlyphIndex = -1;  // no kerning across attribute boundary
+			}
+
+			FONSglyph *glyph = fons__getGlyph(fs, font, codepoint, isize,
+			                                   state->clearType ? 0 : (short)(state->fontBlur * scale),
+			                                   FONS_GLYPH_BITMAP_REQUIRED);
+			if( glyph == NULL)
+				continue;
+
+			if( glyph->isColor)
+			{
+				// Still advance x for color glyphs
+				fons__getQuad(fs, font, prevGlyphIndex, glyph, fscale, spacing, &cx, &cy, &q);
+				prevGlyphIndex = glyph->index;
+				hasColor = 1;
+				continue;
+			}
+
+			fons__getQuad(fs, font, prevGlyphIndex, glyph, fscale, spacing, &cx, &cy, &q);
+			prevGlyphIndex = glyph->index;
+
+			// Apply yOffset
+			q.y0 += yOff;
+			q.y1 += yOff;
+
+			if( isFlipped)
+			{
+				float tmp;
+				tmp = q.y0; q.y0 = q.y1; q.y1 = tmp;
+				tmp = q.t0; q.t0 = q.t1; q.t1 = tmp;
+			}
+
+			float c[4*2];
+			nvgTransformPoint(&c[0],&c[1], state->xform, q.x0*invscale, q.y0*invscale);
+			nvgTransformPoint(&c[2],&c[3], state->xform, q.x1*invscale, q.y0*invscale);
+			nvgTransformPoint(&c[4],&c[5], state->xform, q.x1*invscale, q.y1*invscale);
+			nvgTransformPoint(&c[6],&c[7], state->xform, q.x0*invscale, q.y1*invscale);
+			if( nverts+6 <= cverts)
+			{
+				nvg__vset(&verts[nverts], c[0], c[1], q.s0, q.t0); nverts++;
+				nvg__vset(&verts[nverts], c[4], c[5], q.s1, q.t1); nverts++;
+				nvg__vset(&verts[nverts], c[2], c[3], q.s1, q.t0); nverts++;
+				nvg__vset(&verts[nverts], c[0], c[1], q.s0, q.t0); nverts++;
+				nvg__vset(&verts[nverts], c[6], c[7], q.s0, q.t1); nverts++;
+				nvg__vset(&verts[nverts], c[4], c[5], q.s1, q.t1); nverts++;
+			}
+		}
+
+		// Flush remaining grayscale glyphs
+		nvg__flushTextTexture(ctx);
+		nvg__renderText(ctx, verts, nverts);
+	}
+
+	// Pass 2: color emoji (if any)
+	if( hasColor && ctx->fontContexts[1].fs)
+	{
+		FONScontext    *efs = ctx->fontContexts[1].fs;
+		const char     *str = string;
+		unsigned int   utf8state = 0;
+		unsigned int   codepoint = 0;
+		int            prevGlyphIndex = -1;
+		int            attrIdx = 0;
+		int            fontId;
+		float          fontSize;
+		FONSfont       *font;
+		short          isize;
+		float          fscale, spacing;
+		float          yOff;
+		int            enverts = 0;
+
+		state->fill.innerColor = attributes[0].textColor;
+		state->fill.outerColor = attributes[0].backgroundColor;
+		fontId   = attributes[0].fontId >= 0 ? attributes[0].fontId : state->fontId;
+		fontSize = attributes[0].fontSize > 0 ? attributes[0].fontSize : state->fontSize;
+		yOff     = attributes[0].yOffset * scale;
+		font     = efs->fonts[fontId];
+		isize    = (short)(fontSize * scale * 10.0f);
+		fscale   = fons__tt_getPixelHeightScale(&font->font, (float)isize / 10.0f);
+		spacing  = state->letterSpacing * scale;
+
+		cy = (y * scale) + fons__getVertAlign(efs, font, state->textAlign, isize);
+		cx = x * scale;
+
+		for( ; str < end; str++)
+		{
+			if( fons__decutf8(&utf8state, &codepoint, *(const unsigned char*)str))
+				continue;
+
+			if( attrIdx < nAttributes - 1 && (str + 1) > attributes[attrIdx].end)
+			{
+				if( enverts != 0)
+				{
+					nvg__flushEmojiTexture(ctx);
+					nvg__renderTextEmoji(ctx, verts, enverts);
+					enverts = 0;
+				}
+				attrIdx++;
+				state->fill.innerColor = attributes[attrIdx].textColor;
+				state->fill.outerColor = attributes[attrIdx].backgroundColor;
+				fontId   = attributes[attrIdx].fontId >= 0 ? attributes[attrIdx].fontId : state->fontId;
+				fontSize = attributes[attrIdx].fontSize > 0 ? attributes[attrIdx].fontSize : state->fontSize;
+				yOff     = attributes[attrIdx].yOffset * scale;
+				font     = efs->fonts[fontId];
+				isize    = (short)(fontSize * scale * 10.0f);
+				fscale   = fons__tt_getPixelHeightScale(&font->font, (float)isize / 10.0f);
+				prevGlyphIndex = -1;
+			}
+
+			FONSglyph *glyph = fons__getGlyph(efs, font, codepoint, isize, 0, FONS_GLYPH_BITMAP_REQUIRED);
+			if( glyph == NULL)
+				continue;
+
+			fons__getQuad(efs, font, prevGlyphIndex, glyph, fscale, spacing, &cx, &cy, &q);
+			prevGlyphIndex = glyph->index;
+
+			if( ! glyph->isColor)
+				continue;
+
+			q.y0 += yOff;
+			q.y1 += yOff;
+
+			if( isFlipped)
+			{
+				float tmp;
+				tmp = q.y0; q.y0 = q.y1; q.y1 = tmp;
+				tmp = q.t0; q.t0 = q.t1; q.t1 = tmp;
+			}
+
+			float c[4*2];
+			nvgTransformPoint(&c[0],&c[1], state->xform, q.x0*invscale, q.y0*invscale);
+			nvgTransformPoint(&c[2],&c[3], state->xform, q.x1*invscale, q.y0*invscale);
+			nvgTransformPoint(&c[4],&c[5], state->xform, q.x1*invscale, q.y1*invscale);
+			nvgTransformPoint(&c[6],&c[7], state->xform, q.x0*invscale, q.y1*invscale);
+			if( enverts+6 <= cverts)
+			{
+				nvg__vset(&verts[enverts], c[0], c[1], q.s0, q.t0); enverts++;
+				nvg__vset(&verts[enverts], c[4], c[5], q.s1, q.t1); enverts++;
+				nvg__vset(&verts[enverts], c[2], c[3], q.s1, q.t0); enverts++;
+				nvg__vset(&verts[enverts], c[0], c[1], q.s0, q.t0); enverts++;
+				nvg__vset(&verts[enverts], c[6], c[7], q.s0, q.t1); enverts++;
+				nvg__vset(&verts[enverts], c[4], c[5], q.s1, q.t1); enverts++;
+			}
+		}
+		if( enverts > 0)
+		{
+			nvg__flushEmojiTexture(ctx);
+			nvg__renderTextEmoji(ctx, verts, enverts);
+		}
+	}
+
+	// Restore colors
+	state->fill.innerColor = savedInner;
+	state->fill.outerColor = savedOuter;
+
+	return cx / scale;
+}
+// @mulle-nanovg@ <<
 
 void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const char* string, const char* end)
 {
@@ -4195,6 +4473,38 @@ void nvgTextMetrics(NVGcontext* ctx, float* ascender, float* descender, float* l
 	if (lineh != NULL)
 		*lineh *= invscale;
 	nvgTextMetrics_leave(ctx, ascender, descender, lineh);
+}
+
+
+void nvgTextMetricsWithGap(NVGcontext* ctx, float* ascender, float* descender, float* lineh, float* lineGap)
+{
+	NOT_AVAILABLE_IN_PATH_CONTEXT( ctx);
+
+	NVGstate* state = nvg__getState(ctx);
+	float scale = nvg__getFontScale(state) * ctx->devicePxRatio;
+	float invscale = 1.0f / scale;
+	FONScontext *fs;
+
+	if (state->fontId == FONS_INVALID)
+		return;
+
+	fs = ctx->fontContexts[ state->clearType].fs;
+	fonsSetSize(fs, state->fontSize*scale);
+	fonsSetSpacing(fs, state->letterSpacing*scale);
+	if( ! state->clearType)
+	  fonsSetBlur(fs, state->fontBlur*scale);
+	fonsSetAlign(fs, state->textAlign);
+	fonsSetFont(fs, state->fontId);
+
+	fonsVertMetrics4(fs, ascender, descender, lineh, lineGap);
+	if (ascender != NULL)
+		*ascender *= invscale;
+	if (descender != NULL)
+		*descender *= invscale;
+	if (lineh != NULL)
+		*lineh *= invscale;
+	if (lineGap != NULL)
+		*lineGap *= invscale;
 }
 
 

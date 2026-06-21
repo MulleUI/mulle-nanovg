@@ -138,6 +138,7 @@ float fonsDrawText(FONScontext* s, float x, float y, const char* string, const c
 float fonsTextBounds(FONScontext* s, float x, float y, const char* string, const char* end, float* bounds);
 void fonsLineBounds(FONScontext* s, float y, float* miny, float* maxy);
 void fonsVertMetrics(FONScontext* s, float* ascender, float* descender, float* lineh);
+void fonsVertMetrics4(FONScontext* s, float* ascender, float* descender, float* lineh, float* lineGap);
 
 // Text iterator
 int fonsTextIterInit(FONScontext* stash, FONStextIter* iter, float x, float y, const char* str, const char* end, int bitmapOption);
@@ -189,7 +190,9 @@ typedef struct FONSttFontImpl FONSttFontImpl;
 
 #else
 
-#define STB_TRUETYPE_IMPLEMENTATION
+#ifndef NVG_NO_STB_TRUETYPE_IMPLEMENTATION
+# define STB_TRUETYPE_IMPLEMENTATION
+#endif
 
 static void* fons__tmpalloc(size_t size, void* up);
 static void fons__tmpfree(void* ptr, void* up);
@@ -272,6 +275,7 @@ struct FONSfont
 	float ascender;
 	float descender;
 	float lineh;
+	float lineGap;
 	FONSglyph* glyphs;
 	int cglyphs;
 	int nglyphs;
@@ -1354,6 +1358,7 @@ int fonsAddFontMem(FONScontext* stash, const char* name, unsigned char* data, in
 	font->ascender = (float)ascent / (float)fh;
 	font->descender = (float)descent / (float)fh;
 	font->lineh = font->ascender - font->descender;
+	font->lineGap = (float)lineGap / (float)fh;
 
 	return idx;
 
@@ -2032,6 +2037,29 @@ void fonsVertMetrics(FONScontext* stash,
 		*descender = font->descender*isize/10.0f;
 	if (lineh)
 		*lineh = font->lineh*isize/10.0f;
+}
+
+void fonsVertMetrics4(FONScontext* stash,
+					 float* ascender, float* descender, float* lineh, float* lineGap)
+{
+	FONSfont* font;
+	FONSstate* state = fons__getState(stash);
+	short isize;
+
+	if (stash == NULL) return;
+	if (state->font < 0 || state->font >= stash->nfonts) return;
+	font = stash->fonts[state->font];
+	isize = (short)(state->size*10.0f);
+	if (font->data == NULL) return;
+
+	if (ascender)
+		*ascender = font->ascender*isize/10.0f;
+	if (descender)
+		*descender = font->descender*isize/10.0f;
+	if (lineh)
+		*lineh = font->lineh*isize/10.0f;
+	if (lineGap)
+		*lineGap = font->lineGap*isize/10.0f;
 }
 
 void fonsLineBounds(FONScontext* stash, float y, float* miny, float* maxy)

@@ -836,6 +836,9 @@ int nvgTextGlyphPositions(NVGcontext* ctx, float x, float y, const char* string,
 MULLE__NANOVG_GLOBAL
 void nvgTextMetrics(NVGcontext* ctx, float* ascender, float* descender, float* lineh);
 
+MULLE__NANOVG_GLOBAL
+void nvgTextMetricsWithGap(NVGcontext* ctx, float* ascender, float* descender, float* lineh, float* lineGap);
+
 
 // @mulle-nanovg@ >>
 // Returns the vertical metrics based on the current text style. These metrics
@@ -843,6 +846,27 @@ void nvgTextMetrics(NVGcontext* ctx, float* ascender, float* descender, float* l
 // Measured values are returned in local coordinate space.
 MULLE__NANOVG_GLOBAL
 void nvgTextVisualMetrics(NVGcontext* ctx, float* ascender, float* descender, float* lineh);
+
+// Attributed text: render a string with per-run color/font/size changes.
+// Attributes tile the string contiguously: run 0 starts at `string` and ends
+// at attributes[0].end; run i starts at attributes[i-1].end.
+// The last attribute's end must equal `end` (or end-of-string if end==NULL).
+struct NVGtextAttribute
+{
+   const char   *end;             // pointer past last byte of this run
+   NVGcolor      textColor;       // innerColor for this run
+   NVGcolor      backgroundColor; // outerColor (ClearType hint) for this run
+   int           fontId;          // -1 = inherit from current nvg state
+   float         fontSize;        // <=0 = inherit from current nvg state
+   float         yOffset;         //  0 = baseline, negative = up (superscript)
+};
+typedef struct NVGtextAttribute NVGtextAttribute;
+
+// Renders attributed text. Returns x advance (like nvgText).
+MULLE__NANOVG_GLOBAL
+float nvgAttributedText(NVGcontext* ctx, float x, float y,
+                        const char* string, const char* end,
+                        struct NVGtextAttribute* attributes, int nAttributes);
 // @mulle-nanovg@ <<
 
 // Breaks the specified text into lines. If end is specified only the sub-string will be used.
@@ -865,6 +889,7 @@ void *nvgGetFontHandle(NVGcontext* ctx, int font);
 #ifdef NVG_TRACECODE_DISABLED
 # define nvgTraceName( ctx, name)
 # define nvgTrace( ctx, file)  NULL  // return value
+# define nvgTraceComment( ctx, text)
 #else
 # include <stdio.h>
 // @mulle-nanovg@ >>
@@ -876,6 +901,11 @@ FILE *nvgTrace(NVGcontext* ctx, FILE * file);
 // Name can be NULL, in which case "vg" will be used in traces
 MULLE__NANOVG_GLOBAL
 void nvgTraceName(NVGcontext* ctx, char *name);
+
+// Emit an arbitrary comment/demarcation into the trace output.
+// Does nothing when tracing is off (ctx->trace == NULL).
+MULLE__NANOVG_GLOBAL
+void nvgTraceComment(NVGcontext* ctx, const char *text);
 // @mulle-nanovg@ <<
 #endif
 

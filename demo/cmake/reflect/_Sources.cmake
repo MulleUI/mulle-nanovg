@@ -21,6 +21,7 @@ src/main-linux-gles.c
 src/main-linux-gl-fbo.c
 src/main-linux-gl-readpixels.c
 src/main-linux-gl-texttest.c
+src/main-linux-rlgl-attributed-text.c
 src/main-linux-rlgl-cleartype.c
 src/main-linux-rlgl-emoji.c
 src/main-linux-rlgl-emojipng.c

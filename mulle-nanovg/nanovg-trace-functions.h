@@ -174,4 +174,7 @@ void _nvgSetScissor_enter(FILE *fp, char *ctxName, NVGscissor *scissor);
 void _nvgGetScissor_enter(FILE *fp, char *ctxName, NVGscissor *scissor);
 void _nvgGetScissor_leave(FILE *fp, char *ctxName, NVGscissor *scissor);
 
+// Tracing Utilities
+void _nvgTraceComment_enter(FILE *fp, char *ctxName, const char *text);
+
 #endif // NANOVG_TRACE_H
