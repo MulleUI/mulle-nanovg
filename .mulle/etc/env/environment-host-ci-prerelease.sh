@@ -1,11 +1,11 @@
 #
-# mulle-freetype nodetype: ${MULLE__FREETYPE_NODETYPE:-git}
+# mulle-freetype nodetype: ${MULLE__FREETYPE_NODETYPE:-tar}
 #
 export MULLE__FREETYPE_NODETYPE="git"
 
 
 #
-# mulle-freetype url: ${MULLE__FREETYPE_URL:-https://github.com/MulleUI/mulle-freetype.git}
+# mulle-freetype url: ${MULLE__FREETYPE_URL:-https://github.com/MulleUI/mulle-freetype/archive/${MULLE_TAG}.tar.gz}
 #
 export MULLE__FREETYPE_URL="https://github.com/MulleUI/mulle-freetype.git"
 

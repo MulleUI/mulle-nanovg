@@ -11,7 +11,7 @@ vulkan;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,
 OpenGL;none;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update,only-framework,only-platform-darwin;6D47A657-483D-4C0E-9AA8-4B3543BF976C;;;;;include=<OpenGL/OpenGL.h>
 d3d11;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update,only-platform-windows;663143C7-8A99-4EE4-9B52-A44081B496D6;;;;;
 dxgi;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update,only-platform-windows;7859CD7D-881D-4D06-AC6B-60132D3C55D8;;;;;
-mulle-freetype;${MULLE__FREETYPE_NODETYPE:-git};no-all-load,no-cmake-loader,no-cmake-searchpath,no-import;8CF4746B-C490-4EEC-A167-0F0796BC835C;${MULLE__FREETYPE_URL:-https://github.com/MulleUI/mulle-freetype.git};${MULLE__FREETYPE_BRANCH};${MULLE__FREETYPE_TAG};;
+mulle-freetype;${MULLE__FREETYPE_NODETYPE:-tar};no-all-load,no-cmake-loader,no-cmake-searchpath,no-import;8CF4746B-C490-4EEC-A167-0F0796BC835C;${MULLE__FREETYPE_URL:-https://github.com/MulleUI/mulle-freetype/archive/${MULLE_TAG}.tar.gz};${MULLE__FREETYPE_BRANCH};${MULLE__FREETYPE_TAG:-latest};;
 harfbuzz;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;6C4C99CE-7EBD-4F99-A5CA-A24CA46F323A;;${HARFBUZZ_BRANCH};;;
 png;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update;E1BF242C-47A1-4392-B3D9-C290D9EC7DFC;;;;;
 z;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update;87322E32-3B7F-4AB4-A5B8-610C1FB1839E;;;;;
