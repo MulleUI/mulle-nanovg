@@ -14,19 +14,6 @@
 #ifndef _mulle_nanovg_include_h__
 #define _mulle_nanovg_include_h__
 
-// To remove the following dependency (headers and library) completely:
-//   `mulle-sde dependency remove mulle-freetype`
-// (Use 9B44D879-8E6C-49D9-A09E-86998C13B49A instead of mulle-freetype, if there are duplicate entries)
-//
-// You can tweak the following #include with these commands:
-//    remove #include: `mulle-sde dependency mark mulle-freetype no-header`
-//    rename              : `mulle-sde dependency|library set mulle-freetype include whatever.h`
-//    reorder             : `mulle-sde dependency move mulle-freetype <up|down>`
-//    toggle objc         : `mulle-sde dependency mark mulle-freetype [no-]import`
-//    toggle public       : `mulle-sde dependency mark mulle-freetype [no-]public`
-//    toggle optional     : `mulle-sde dependency mark mulle-freetype [no-]require`
-//    remove for platform : `mulle-sde dependency mark mulle-freetype no-platform-<uname>`
-//        (use `mulle-sourcetree-to-c --unames` to list known values)
-#include <mulle-freetype/mulle-freetype.h>   // mulle-freetype
+/* no headers */
 
 #endif

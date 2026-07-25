@@ -327,6 +327,39 @@ endif()
 
 
 #
+# Generated from sourcetree: 4E0EA0E7-8C54-499A-964A-920977CD56B3;freetype;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;
+# Disable with : `mulle-sourcetree mark freetype `
+# Disable for this platform: `mulle-sourcetree mark freetype no-cmake-platform-${MULLE_UNAME}`
+# Disable for a sdk: `mulle-sourcetree mark freetype no-cmake-sdk-<name>`
+#
+if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
+   list( APPEND OS_SPECIFIC_LIBRARIES "freetype")
+else()
+   if( NOT FREETYPE_LIBRARY)
+      find_library( FREETYPE_LIBRARY NAMES
+         freetype
+      )
+      message( STATUS "FREETYPE_LIBRARY is ${FREETYPE_LIBRARY}")
+      #
+      # The order looks ascending, but due to the way this file is read
+      # it ends up being descending, which is what we need.
+      #
+      if( FREETYPE_LIBRARY)
+         #
+         # Add FREETYPE_LIBRARY to OS_SPECIFIC_LIBRARIES list.
+         # Disable with: `mulle-sourcetree mark freetype no-cmake-add`
+         #
+         list( APPEND OS_SPECIFIC_LIBRARIES ${FREETYPE_LIBRARY})
+         # intentionally left blank
+      else()
+         # Disable with: `mulle-sourcetree mark freetype no-require-link`
+         message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetype")
+      endif()
+   endif()
+endif()
+
+
+#
 # Generated from sourcetree: 6D5EB449-7D2A-42D1-9616-581ACBBEB2E7;Metal;no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-framework,only-platform-darwin;
 # Disable with : `mulle-sourcetree mark Metal `
 # Disable for this platform: `mulle-sourcetree mark Metal no-cmake-platform-${MULLE_UNAME}`

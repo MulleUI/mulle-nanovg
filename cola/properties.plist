@@ -14,7 +14,7 @@
    dependencies =
    (
       {
-         description="⌨️ mulle-freetype is a mulle-sde convenience";
+         description="⌨️ mulle-freetype is a mulle-sde dependency convenience";
          domain="github";
          name="mulle-freetype";
          repo="mulle-freetype";
