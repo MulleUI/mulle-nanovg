@@ -1,5 +1,7 @@
 # mulle-nanovg
 
+Part of [MulleUI](https://github.com/MulleUI) — UIKit-shaped modular GUI libraries for mulle-objc.
+
 #### 🧿 A better NanoVG with OpenGL, Metal, Vulkan, DirectX 11 backends.
 
 - Plus additional API
@@ -122,6 +124,12 @@ The data for the whole frame is buffered and flushed in `nvgEndFrame()`. The fol
 
 See the header file [nanovg.h](/src/nanovg.h) for API reference.
 
+
+
+## Documentation & Guides
+
+* [API Summary](asset/dox/api/toc)
+* [Coder Guide](asset/howto/coder/mulle-nanovg)
 
 
 

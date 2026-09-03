@@ -112,6 +112,24 @@ fragment float4 fragmentShader(RasterizerData in [[stage_in]],
       color = float4(color.x);
     color *= scissor;
     return color * uniforms.innerCol;
+  } else if (uniforms.type == 3) {  // MNVG_SHADER_CLEARTYPE
+    float4 color = texture.sample(sampler, in.ftcoord);
+    float deriv = dfdx(in.ftcoord.x);
+    if (deriv < 0.0)
+      color.xz = color.zx;
+    else if (deriv == 0.0)
+      color = float4((color.x + color.y + color.z) * (1.0 / 3.0));
+    if (color.w * scissor * uniforms.innerCol.w < (1.0 / 256.0))
+      discard_fragment();
+    float4 result;
+    result.xyz = color.xyz * uniforms.innerCol.xyz
+               + (float3(uniforms.innerCol.w) - color.xyz) * uniforms.outerCol.xyz;
+    result.w = uniforms.innerCol.w;
+    result *= scissor;
+    return result;
+  } else if (uniforms.type == 4) {  // MNVG_SHADER_EMOJI
+    float4 color = texture.sample(sampler, in.ftcoord);
+    return color * scissor * uniforms.innerCol.a;
   } else {  // MNVG_SHADER_IMG
     float4 color = texture.sample(sampler, in.ftcoord);
     if (uniforms.texType == 1)
@@ -140,6 +158,28 @@ fragment float4 fragmentShaderAA(RasterizerData in [[stage_in]],
       color = float4(color.x);
     color *= scissor;
     return color * uniforms.innerCol;
+  }
+
+  if (uniforms.type == 3) {  // MNVG_SHADER_CLEARTYPE
+    float4 color = texture.sample(sampler, in.ftcoord);
+    float deriv = dfdx(in.ftcoord.x);
+    if (deriv < 0.0)
+      color.xz = color.zx;
+    else if (deriv == 0.0)
+      color = float4((color.x + color.y + color.z) * (1.0 / 3.0));
+    if (color.w * scissor * uniforms.innerCol.w < (1.0 / 256.0))
+      discard_fragment();
+    float4 result;
+    result.xyz = color.xyz * uniforms.innerCol.xyz
+               + (float3(uniforms.innerCol.w) - color.xyz) * uniforms.outerCol.xyz;
+    result.w = uniforms.innerCol.w;
+    result *= scissor;
+    return result;
+  }
+
+  if (uniforms.type == 4) {  // MNVG_SHADER_EMOJI
+    float4 color = texture.sample(sampler, in.ftcoord);
+    return color * scissor * uniforms.innerCol.a;
   }
 
   float strokeAlpha = strokeMask(uniforms, in.ftcoord);

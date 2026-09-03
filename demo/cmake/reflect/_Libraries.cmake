@@ -22,20 +22,27 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
       list( APPEND OS_SPECIFIC_LIBRARIES "m")
    else()
       if( NOT M_LIBRARY)
-         find_library( M_LIBRARY NAMES
-            m
-         )
+         foreach( _TMP_M_LIBRARY_TARGET m)
+            if( TARGET ${_TMP_M_LIBRARY_TARGET})
+               set( M_LIBRARY ${_TMP_M_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT M_LIBRARY)
+            find_library( M_LIBRARY NAMES
+               m
+            )
+         endif()
          message( STATUS "M_LIBRARY is ${M_LIBRARY}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( M_LIBRARY)
+      endif()
+      if( M_LIBRARY)
             #
             # Add M_LIBRARY to OS_SPECIFIC_LIBRARIES list.
             # Disable with: `mulle-sourcetree mark m no-cmake-add`
             #
-            list( APPEND OS_SPECIFIC_LIBRARIES ${M_LIBRARY})
+            if( NOT ${M_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+               list( APPEND OS_SPECIFIC_LIBRARIES ${M_LIBRARY})
+            endif()
             #
             # Inherit information from dependency.
             # Encompasses: no-cmake-searchpath,no-cmake-dependency,no-cmake-loader
@@ -78,10 +85,9 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
                   message( STATUS "${_TMP_M_DIR} not found")
                endif()
             endforeach()
-         else()
-            # Disable with: `mulle-sourcetree mark m no-require-link`
-            message( SEND_ERROR "M_LIBRARY was not found in m")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark m no-require-link`
+         message( SEND_ERROR "M_LIBRARY was not found in m")
       endif()
    endif()
 endif()
@@ -98,25 +104,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
       list( APPEND OS_SPECIFIC_LIBRARIES "GLESv2")
    else()
       if( NOT GLE_SV2_LIBRARY)
-         find_library( GLE_SV2_LIBRARY NAMES
-            GLESv2
-         )
+         foreach( _TMP_GLE_SV2_LIBRARY_TARGET GLESv2)
+            if( TARGET ${_TMP_GLE_SV2_LIBRARY_TARGET})
+               set( GLE_SV2_LIBRARY ${_TMP_GLE_SV2_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT GLE_SV2_LIBRARY)
+            find_library( GLE_SV2_LIBRARY NAMES
+               GLESv2
+            )
+         endif()
          message( STATUS "GLE_SV2_LIBRARY is ${GLE_SV2_LIBRARY}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( GLE_SV2_LIBRARY)
+      endif()
+      if( GLE_SV2_LIBRARY)
             #
             # Add GLE_SV2_LIBRARY to OS_SPECIFIC_LIBRARIES list.
             # Disable with: `mulle-sourcetree mark GLESv2 no-cmake-add`
             #
-            list( APPEND OS_SPECIFIC_LIBRARIES ${GLE_SV2_LIBRARY})
+            if( NOT ${GLE_SV2_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+               list( APPEND OS_SPECIFIC_LIBRARIES ${GLE_SV2_LIBRARY})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark GLESv2 no-require-link`
-            message( SEND_ERROR "GLE_SV2_LIBRARY was not found in GLESv2")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark GLESv2 no-require-link`
+         message( SEND_ERROR "GLE_SV2_LIBRARY was not found in GLESv2")
       endif()
    endif()
 endif()
@@ -133,25 +145,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
       list( APPEND OS_SPECIFIC_LIBRARIES "vulkan")
    else()
       if( NOT VULKAN_LIBRARY)
-         find_library( VULKAN_LIBRARY NAMES
-            vulkan
-         )
+         foreach( _TMP_VULKAN_LIBRARY_TARGET vulkan)
+            if( TARGET ${_TMP_VULKAN_LIBRARY_TARGET})
+               set( VULKAN_LIBRARY ${_TMP_VULKAN_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT VULKAN_LIBRARY)
+            find_library( VULKAN_LIBRARY NAMES
+               vulkan
+            )
+         endif()
          message( STATUS "VULKAN_LIBRARY is ${VULKAN_LIBRARY}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( VULKAN_LIBRARY)
+      endif()
+      if( VULKAN_LIBRARY)
             #
             # Add VULKAN_LIBRARY to OS_SPECIFIC_LIBRARIES list.
             # Disable with: `mulle-sourcetree mark vulkan no-cmake-add`
             #
-            list( APPEND OS_SPECIFIC_LIBRARIES ${VULKAN_LIBRARY})
+            if( NOT ${VULKAN_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+               list( APPEND OS_SPECIFIC_LIBRARIES ${VULKAN_LIBRARY})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark vulkan no-require-link`
-            message( SEND_ERROR "VULKAN_LIBRARY was not found in vulkan")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark vulkan no-require-link`
+         message( SEND_ERROR "VULKAN_LIBRARY was not found in vulkan")
       endif()
    endif()
 endif()
@@ -168,25 +186,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
       list( APPEND OS_SPECIFIC_LIBRARIES "d3d11")
    else()
       if( NOT D3D11_LIBRARY)
-         find_library( D3D11_LIBRARY NAMES
-            d3d11
-         )
+         foreach( _TMP_D3D11_LIBRARY_TARGET d3d11)
+            if( TARGET ${_TMP_D3D11_LIBRARY_TARGET})
+               set( D3D11_LIBRARY ${_TMP_D3D11_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT D3D11_LIBRARY)
+            find_library( D3D11_LIBRARY NAMES
+               d3d11
+            )
+         endif()
          message( STATUS "D3D11_LIBRARY is ${D3D11_LIBRARY}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( D3D11_LIBRARY)
+      endif()
+      if( D3D11_LIBRARY)
             #
             # Add D3D11_LIBRARY to OS_SPECIFIC_LIBRARIES list.
             # Disable with: `mulle-sourcetree mark d3d11 no-cmake-add`
             #
-            list( APPEND OS_SPECIFIC_LIBRARIES ${D3D11_LIBRARY})
+            if( NOT ${D3D11_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+               list( APPEND OS_SPECIFIC_LIBRARIES ${D3D11_LIBRARY})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark d3d11 no-require-link`
-            message( SEND_ERROR "D3D11_LIBRARY was not found in d3d11")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark d3d11 no-require-link`
+         message( SEND_ERROR "D3D11_LIBRARY was not found in d3d11")
       endif()
    endif()
 endif()
@@ -203,25 +227,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
       list( APPEND OS_SPECIFIC_LIBRARIES "dxgi")
    else()
       if( NOT DXGI_LIBRARY)
-         find_library( DXGI_LIBRARY NAMES
-            dxgi
-         )
+         foreach( _TMP_DXGI_LIBRARY_TARGET dxgi)
+            if( TARGET ${_TMP_DXGI_LIBRARY_TARGET})
+               set( DXGI_LIBRARY ${_TMP_DXGI_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT DXGI_LIBRARY)
+            find_library( DXGI_LIBRARY NAMES
+               dxgi
+            )
+         endif()
          message( STATUS "DXGI_LIBRARY is ${DXGI_LIBRARY}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( DXGI_LIBRARY)
+      endif()
+      if( DXGI_LIBRARY)
             #
             # Add DXGI_LIBRARY to OS_SPECIFIC_LIBRARIES list.
             # Disable with: `mulle-sourcetree mark dxgi no-cmake-add`
             #
-            list( APPEND OS_SPECIFIC_LIBRARIES ${DXGI_LIBRARY})
+            if( NOT ${DXGI_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+               list( APPEND OS_SPECIFIC_LIBRARIES ${DXGI_LIBRARY})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark dxgi no-require-link`
-            message( SEND_ERROR "DXGI_LIBRARY was not found in dxgi")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark dxgi no-require-link`
+         message( SEND_ERROR "DXGI_LIBRARY was not found in dxgi")
       endif()
    endif()
 endif()
@@ -237,25 +267,31 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "harfbuzz")
 else()
    if( NOT HARFBUZZ_LIBRARY)
-      find_library( HARFBUZZ_LIBRARY NAMES
-         harfbuzz
-      )
+      foreach( _TMP_HARFBUZZ_LIBRARY_TARGET harfbuzz)
+         if( TARGET ${_TMP_HARFBUZZ_LIBRARY_TARGET})
+            set( HARFBUZZ_LIBRARY ${_TMP_HARFBUZZ_LIBRARY_TARGET})
+            break()
+         endif()
+      endforeach()
+      if( NOT HARFBUZZ_LIBRARY)
+         find_library( HARFBUZZ_LIBRARY NAMES
+            harfbuzz
+         )
+      endif()
       message( STATUS "HARFBUZZ_LIBRARY is ${HARFBUZZ_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( HARFBUZZ_LIBRARY)
+   endif()
+   if( HARFBUZZ_LIBRARY)
          #
          # Add HARFBUZZ_LIBRARY to OS_SPECIFIC_LIBRARIES list.
          # Disable with: `mulle-sourcetree mark harfbuzz no-cmake-add`
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${HARFBUZZ_LIBRARY})
+         if( NOT ${HARFBUZZ_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+            list( APPEND OS_SPECIFIC_LIBRARIES ${HARFBUZZ_LIBRARY})
+         endif()
          # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark harfbuzz no-require-link`
-         message( SEND_ERROR "HARFBUZZ_LIBRARY was not found in harfbuzz")
-      endif()
+   else()
+      # Disable with: `mulle-sourcetree mark harfbuzz no-require-link`
+      message( SEND_ERROR "HARFBUZZ_LIBRARY was not found in harfbuzz")
    endif()
 endif()
 
@@ -270,25 +306,31 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "png")
 else()
    if( NOT PNG_LIBRARY)
-      find_library( PNG_LIBRARY NAMES
-         png
-      )
+      foreach( _TMP_PNG_LIBRARY_TARGET png)
+         if( TARGET ${_TMP_PNG_LIBRARY_TARGET})
+            set( PNG_LIBRARY ${_TMP_PNG_LIBRARY_TARGET})
+            break()
+         endif()
+      endforeach()
+      if( NOT PNG_LIBRARY)
+         find_library( PNG_LIBRARY NAMES
+            png
+         )
+      endif()
       message( STATUS "PNG_LIBRARY is ${PNG_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( PNG_LIBRARY)
+   endif()
+   if( PNG_LIBRARY)
          #
          # Add PNG_LIBRARY to OS_SPECIFIC_LIBRARIES list.
          # Disable with: `mulle-sourcetree mark png no-cmake-add`
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${PNG_LIBRARY})
+         if( NOT ${PNG_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+            list( APPEND OS_SPECIFIC_LIBRARIES ${PNG_LIBRARY})
+         endif()
          # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark png no-require-link`
-         message( SEND_ERROR "PNG_LIBRARY was not found in png")
-      endif()
+   else()
+      # Disable with: `mulle-sourcetree mark png no-require-link`
+      message( SEND_ERROR "PNG_LIBRARY was not found in png")
    endif()
 endif()
 
@@ -303,25 +345,31 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "z")
 else()
    if( NOT Z_LIBRARY)
-      find_library( Z_LIBRARY NAMES
-         z
-      )
+      foreach( _TMP_Z_LIBRARY_TARGET z)
+         if( TARGET ${_TMP_Z_LIBRARY_TARGET})
+            set( Z_LIBRARY ${_TMP_Z_LIBRARY_TARGET})
+            break()
+         endif()
+      endforeach()
+      if( NOT Z_LIBRARY)
+         find_library( Z_LIBRARY NAMES
+            z
+         )
+      endif()
       message( STATUS "Z_LIBRARY is ${Z_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( Z_LIBRARY)
+   endif()
+   if( Z_LIBRARY)
          #
          # Add Z_LIBRARY to OS_SPECIFIC_LIBRARIES list.
          # Disable with: `mulle-sourcetree mark z no-cmake-add`
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${Z_LIBRARY})
+         if( NOT ${Z_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+            list( APPEND OS_SPECIFIC_LIBRARIES ${Z_LIBRARY})
+         endif()
          # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark z no-require-link`
-         message( SEND_ERROR "Z_LIBRARY was not found in z")
-      endif()
+   else()
+      # Disable with: `mulle-sourcetree mark z no-require-link`
+      message( SEND_ERROR "Z_LIBRARY was not found in z")
    endif()
 endif()
 
@@ -336,25 +384,31 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "freetype")
 else()
    if( NOT FREETYPE_LIBRARY)
-      find_library( FREETYPE_LIBRARY NAMES
-         freetype
-      )
+      foreach( _TMP_FREETYPE_LIBRARY_TARGET freetype)
+         if( TARGET ${_TMP_FREETYPE_LIBRARY_TARGET})
+            set( FREETYPE_LIBRARY ${_TMP_FREETYPE_LIBRARY_TARGET})
+            break()
+         endif()
+      endforeach()
+      if( NOT FREETYPE_LIBRARY)
+         find_library( FREETYPE_LIBRARY NAMES
+            freetype
+         )
+      endif()
       message( STATUS "FREETYPE_LIBRARY is ${FREETYPE_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( FREETYPE_LIBRARY)
+   endif()
+   if( FREETYPE_LIBRARY)
          #
          # Add FREETYPE_LIBRARY to OS_SPECIFIC_LIBRARIES list.
          # Disable with: `mulle-sourcetree mark freetype no-cmake-add`
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${FREETYPE_LIBRARY})
+         if( NOT ${FREETYPE_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+            list( APPEND OS_SPECIFIC_LIBRARIES ${FREETYPE_LIBRARY})
+         endif()
          # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark freetype no-require-link`
-         message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetype")
-      endif()
+   else()
+      # Disable with: `mulle-sourcetree mark freetype no-require-link`
+      message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetype")
    endif()
 endif()
 
@@ -370,25 +424,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "Metal")
    else()
       if( NOT METAL_FRAMEWORK)
-         find_library( METAL_FRAMEWORK NAMES
-            Metal
-         )
+         foreach( _TMP_METAL_FRAMEWORK_TARGET Metal)
+            if( TARGET ${_TMP_METAL_FRAMEWORK_TARGET})
+               set( METAL_FRAMEWORK ${_TMP_METAL_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT METAL_FRAMEWORK)
+            find_library( METAL_FRAMEWORK NAMES
+               Metal
+            )
+         endif()
          message( STATUS "METAL_FRAMEWORK is ${METAL_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( METAL_FRAMEWORK)
+      endif()
+      if( METAL_FRAMEWORK)
             #
             # Add METAL_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark Metal no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${METAL_FRAMEWORK})
+            if( NOT ${METAL_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${METAL_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark Metal no-require-link`
-            message( SEND_ERROR "METAL_FRAMEWORK was not found in Metal")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark Metal no-require-link`
+         message( SEND_ERROR "METAL_FRAMEWORK was not found in Metal")
       endif()
    endif()
 endif()
@@ -405,25 +465,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "QuartzCore")
    else()
       if( NOT QUARTZ_CORE_FRAMEWORK)
-         find_library( QUARTZ_CORE_FRAMEWORK NAMES
-            QuartzCore
-         )
+         foreach( _TMP_QUARTZ_CORE_FRAMEWORK_TARGET QuartzCore)
+            if( TARGET ${_TMP_QUARTZ_CORE_FRAMEWORK_TARGET})
+               set( QUARTZ_CORE_FRAMEWORK ${_TMP_QUARTZ_CORE_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT QUARTZ_CORE_FRAMEWORK)
+            find_library( QUARTZ_CORE_FRAMEWORK NAMES
+               QuartzCore
+            )
+         endif()
          message( STATUS "QUARTZ_CORE_FRAMEWORK is ${QUARTZ_CORE_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( QUARTZ_CORE_FRAMEWORK)
+      endif()
+      if( QUARTZ_CORE_FRAMEWORK)
             #
             # Add QUARTZ_CORE_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark QuartzCore no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${QUARTZ_CORE_FRAMEWORK})
+            if( NOT ${QUARTZ_CORE_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${QUARTZ_CORE_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark QuartzCore no-require-link`
-            message( SEND_ERROR "QUARTZ_CORE_FRAMEWORK was not found in QuartzCore")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark QuartzCore no-require-link`
+         message( SEND_ERROR "QUARTZ_CORE_FRAMEWORK was not found in QuartzCore")
       endif()
    endif()
 endif()
@@ -440,25 +506,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "CoreGraphics")
    else()
       if( NOT CORE_GRAPHICS_FRAMEWORK)
-         find_library( CORE_GRAPHICS_FRAMEWORK NAMES
-            CoreGraphics
-         )
+         foreach( _TMP_CORE_GRAPHICS_FRAMEWORK_TARGET CoreGraphics)
+            if( TARGET ${_TMP_CORE_GRAPHICS_FRAMEWORK_TARGET})
+               set( CORE_GRAPHICS_FRAMEWORK ${_TMP_CORE_GRAPHICS_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT CORE_GRAPHICS_FRAMEWORK)
+            find_library( CORE_GRAPHICS_FRAMEWORK NAMES
+               CoreGraphics
+            )
+         endif()
          message( STATUS "CORE_GRAPHICS_FRAMEWORK is ${CORE_GRAPHICS_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( CORE_GRAPHICS_FRAMEWORK)
+      endif()
+      if( CORE_GRAPHICS_FRAMEWORK)
             #
             # Add CORE_GRAPHICS_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark CoreGraphics no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${CORE_GRAPHICS_FRAMEWORK})
+            if( NOT ${CORE_GRAPHICS_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${CORE_GRAPHICS_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark CoreGraphics no-require-link`
-            message( SEND_ERROR "CORE_GRAPHICS_FRAMEWORK was not found in CoreGraphics")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark CoreGraphics no-require-link`
+         message( SEND_ERROR "CORE_GRAPHICS_FRAMEWORK was not found in CoreGraphics")
       endif()
    endif()
 endif()
@@ -475,25 +547,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "Foundation")
    else()
       if( NOT FOUNDATION_FRAMEWORK)
-         find_library( FOUNDATION_FRAMEWORK NAMES
-            Foundation
-         )
+         foreach( _TMP_FOUNDATION_FRAMEWORK_TARGET Foundation)
+            if( TARGET ${_TMP_FOUNDATION_FRAMEWORK_TARGET})
+               set( FOUNDATION_FRAMEWORK ${_TMP_FOUNDATION_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT FOUNDATION_FRAMEWORK)
+            find_library( FOUNDATION_FRAMEWORK NAMES
+               Foundation
+            )
+         endif()
          message( STATUS "FOUNDATION_FRAMEWORK is ${FOUNDATION_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( FOUNDATION_FRAMEWORK)
+      endif()
+      if( FOUNDATION_FRAMEWORK)
             #
             # Add FOUNDATION_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark Foundation no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${FOUNDATION_FRAMEWORK})
+            if( NOT ${FOUNDATION_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${FOUNDATION_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark Foundation no-require-link`
-            message( SEND_ERROR "FOUNDATION_FRAMEWORK was not found in Foundation")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark Foundation no-require-link`
+         message( SEND_ERROR "FOUNDATION_FRAMEWORK was not found in Foundation")
       endif()
    endif()
 endif()
@@ -510,25 +588,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "IOKit")
    else()
       if( NOT IO_KIT_FRAMEWORK)
-         find_library( IO_KIT_FRAMEWORK NAMES
-            IOKit
-         )
+         foreach( _TMP_IO_KIT_FRAMEWORK_TARGET IOKit)
+            if( TARGET ${_TMP_IO_KIT_FRAMEWORK_TARGET})
+               set( IO_KIT_FRAMEWORK ${_TMP_IO_KIT_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT IO_KIT_FRAMEWORK)
+            find_library( IO_KIT_FRAMEWORK NAMES
+               IOKit
+            )
+         endif()
          message( STATUS "IO_KIT_FRAMEWORK is ${IO_KIT_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( IO_KIT_FRAMEWORK)
+      endif()
+      if( IO_KIT_FRAMEWORK)
             #
             # Add IO_KIT_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark IOKit no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${IO_KIT_FRAMEWORK})
+            if( NOT ${IO_KIT_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${IO_KIT_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark IOKit no-require-link`
-            message( SEND_ERROR "IO_KIT_FRAMEWORK was not found in IOKit")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark IOKit no-require-link`
+         message( SEND_ERROR "IO_KIT_FRAMEWORK was not found in IOKit")
       endif()
    endif()
 endif()
@@ -545,25 +629,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "AppKit")
    else()
       if( NOT APP_KIT_FRAMEWORK)
-         find_library( APP_KIT_FRAMEWORK NAMES
-            AppKit
-         )
+         foreach( _TMP_APP_KIT_FRAMEWORK_TARGET AppKit)
+            if( TARGET ${_TMP_APP_KIT_FRAMEWORK_TARGET})
+               set( APP_KIT_FRAMEWORK ${_TMP_APP_KIT_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT APP_KIT_FRAMEWORK)
+            find_library( APP_KIT_FRAMEWORK NAMES
+               AppKit
+            )
+         endif()
          message( STATUS "APP_KIT_FRAMEWORK is ${APP_KIT_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( APP_KIT_FRAMEWORK)
+      endif()
+      if( APP_KIT_FRAMEWORK)
             #
             # Add APP_KIT_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark AppKit no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${APP_KIT_FRAMEWORK})
+            if( NOT ${APP_KIT_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${APP_KIT_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark AppKit no-require-link`
-            message( SEND_ERROR "APP_KIT_FRAMEWORK was not found in AppKit")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark AppKit no-require-link`
+         message( SEND_ERROR "APP_KIT_FRAMEWORK was not found in AppKit")
       endif()
    endif()
 endif()
@@ -580,25 +670,31 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS "OpenGL")
    else()
       if( NOT OPEN_GL_FRAMEWORK)
-         find_library( OPEN_GL_FRAMEWORK NAMES
-            OpenGL
-         )
+         foreach( _TMP_OPEN_GL_FRAMEWORK_TARGET OpenGL)
+            if( TARGET ${_TMP_OPEN_GL_FRAMEWORK_TARGET})
+               set( OPEN_GL_FRAMEWORK ${_TMP_OPEN_GL_FRAMEWORK_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT OPEN_GL_FRAMEWORK)
+            find_library( OPEN_GL_FRAMEWORK NAMES
+               OpenGL
+            )
+         endif()
          message( STATUS "OPEN_GL_FRAMEWORK is ${OPEN_GL_FRAMEWORK}")
-         #
-         # The order looks ascending, but due to the way this file is read
-         # it ends up being descending, which is what we need.
-         #
-         if( OPEN_GL_FRAMEWORK)
+      endif()
+      if( OPEN_GL_FRAMEWORK)
             #
             # Add OPEN_GL_FRAMEWORK to ALL_LOAD_OS_SPECIFIC_FRAMEWORKS list.
             # Disable with: `mulle-sourcetree mark OpenGL no-cmake-add`
             #
-            list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${OPEN_GL_FRAMEWORK})
+            if( NOT ${OPEN_GL_FRAMEWORK} IN_LIST ALL_LOAD_OS_SPECIFIC_FRAMEWORKS)
+               list( APPEND ALL_LOAD_OS_SPECIFIC_FRAMEWORKS ${OPEN_GL_FRAMEWORK})
+            endif()
             # intentionally left blank
-         else()
-            # Disable with: `mulle-sourcetree mark OpenGL no-require-link`
-            message( SEND_ERROR "OPEN_GL_FRAMEWORK was not found in OpenGL")
-         endif()
+      else()
+         # Disable with: `mulle-sourcetree mark OpenGL no-require-link`
+         message( SEND_ERROR "OPEN_GL_FRAMEWORK was not found in OpenGL")
       endif()
    endif()
 endif()

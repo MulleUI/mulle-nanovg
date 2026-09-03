@@ -26,6 +26,12 @@ if( NOT LIBRARY_DOWNCASE_IDENTIFIER)
    string( TOLOWER "${LIBRARY_IDENTIFIER}" LIBRARY_DOWNCASE_IDENTIFIER)
 endif()
 
+if( BUILD_SHARED_LIBS)
+   message( STATUS "Building dynamic \"${LIBRARY_NAME}\"")
+else()
+   message( STATUS "Building static \"${LIBRARY_NAME}\"")
+endif()
+
 # if( NOT LIBRARY_DOWNCASE_IDENTIFIER)
 #    string( TOLOWER "${LIBRARY_IDENTIFIER}" LIBRARY_DOWNCASE_IDENTIFIER)
 # endif()
@@ -41,9 +47,11 @@ if( NOT LIBRARY_RESOURCES)
    set( __LIBRARY_RESOURCES_UNSET ON)
 endif()
 
+option( DLL_EXPORT_ALL "Export all global symbols for DLL" ON)
+set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ${DLL_EXPORT_ALL})
+
 
 include( PreLibrary OPTIONAL)
-
 
 # support header only library, and library just made up of pre-compiled
 # object files
@@ -51,9 +59,6 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
    # RPATH must be ahead of add_library, but is it really needed ?
    include( InstallRpath OPTIONAL)
 
-   option( DLL_EXPORT_ALL "Export all global symbols for DLL" ON)
-
-   set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ${DLL_EXPORT_ALL})
 
    set( ALL_OBJECT_FILES
       ${OTHER_LIBRARY_OBJECT_FILES}
@@ -67,7 +72,7 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
    # This allows PostLibrary to run an analysis step over PROJECT_FILES and
    # generate files to be included by STAGE2_SOURCES. If there are no
    # STAGE2_SOURCES then this is just a more verbose way of doing it.
-   # OBJC_LOADER_INC is the generated analysis step.
+   # OBJC_DEPS_INC is the generated analysis step.
    #
    # This also enables parallel builds, when the products for a link aren't
    # available yet.
@@ -89,17 +94,42 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
       set_target_properties( ${LIBRARY_COMPILE_TARGET}
          PROPERTIES
             CXX_STANDARD 11
-#            DEFINE_SYMBOL "${LIBRARY_UPCASE_IDENTIFIER}_SHARED_BUILD"
       )
-
       target_compile_definitions( ${LIBRARY_COMPILE_TARGET} PRIVATE "${LIBRARY_UPCASE_IDENTIFIER}_BUILD")
-
-      #
-      # Sometimes needed for elder linux ? Seen on xenial, with mulle-mmap
-      #
       if( BUILD_SHARED_LIBS)
          set_property( TARGET ${LIBRARY_COMPILE_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
       endif()
+
+      #
+      # add_subdirectory support:
+      #
+      # An OBJECT library does not link, so it does not pick up the usage
+      # requirements (include directories, definitions) of our dependencies
+      # by itself. When a dependency resolved to a cmake target - which is
+      # what happens when it was pulled in with add_subdirectory - link
+      # against it. This gives us its INTERFACE_INCLUDE_DIRECTORIES, which
+      # for a mulle project is the single amalgamated header directory set up
+      # by InstallCMakeInclude, and it establishes the build order, so the
+      # headers are in place before we compile.
+      #
+      # In a mulle-craft build the dependencies are files, not targets, and
+      # their headers come from DEPENDENCY_DIR, so nothing happens here.
+      #
+      foreach( _dep_lib
+               ${DEPENDENCY_LIBRARIES}
+               ${OPTIONAL_DEPENDENCY_LIBRARIES}
+               ${ALL_LOAD_DEPENDENCY_LIBRARIES}
+               ${ALL_LOAD_OPTIONAL_DEPENDENCY_LIBRARIES}
+               ${FORCE_ALL_LOAD_DEPENDENCY_LIBRARIES}
+               ${STARTUP_DEPENDENCY_LIBRARIES}
+               ${STARTUP_ALL_LOAD_DEPENDENCY_LIBRARIES}
+               ${FORCE_STARTUP_ALL_LOAD_DEPENDENCY_LIBRARIES})
+         if( TARGET "${_dep_lib}")
+            message( STATUS "${LIBRARY_COMPILE_TARGET} inherits usage requirements of target \"${_dep_lib}\"")
+            target_link_libraries( ${LIBRARY_COMPILE_TARGET} PRIVATE "${_dep_lib}")
+         endif()
+      endforeach()
+      unset( _dep_lib)
    else()
       set( LIBRARY_COMPILE_TARGET "${LIBRARY_NAME}")
       set( LIBRARY_LINK_TARGET "${LIBRARY_NAME}")
@@ -118,20 +148,20 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
          $<TARGET_OBJECTS:${LIBRARY_STAGE2_TARGET}>
       )
 
+      # set on all stages
       set_target_properties( ${LIBRARY_STAGE2_TARGET}
          PROPERTIES
             CXX_STANDARD 11
-#            DEFINE_SYMBOL "${LIBRARY_UPCASE_IDENTIFIER}_SHARED_BUILD"
       )
       target_compile_definitions( ${LIBRARY_STAGE2_TARGET} PRIVATE "${LIBRARY_UPCASE_IDENTIFIER}_BUILD")
-
       if( BUILD_SHARED_LIBS)
-         set_property(TARGET ${LIBRARY_STAGE2_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+         set_property( TARGET ${LIBRARY_STAGE2_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
       endif()
    else()
       if( STAGE2_HEADERS)
          message( SEND_ERROR "No STAGE2_SOURCES found but STAGE2_HEADERS exist")
       endif()
+      unset( LIBRARY_STAGE2_TARGET)
    endif()
 
 
@@ -159,24 +189,14 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
          add_dependencies( "${LIBRARY_NAME}" ${LIBRARY_STAGE2_TARGET})
       endif()
 
-      # MEMO: DEFINE_SYMBOL is only active when building shared libs
-      #                     we want it for static too..
-      set_target_properties( "${LIBRARY_NAME}"
-         PROPERTIES
-            CXX_STANDARD 11
-#            DEFINE_SYMBOL "${LIBRARY_UPCASE_IDENTIFIER}_SHARED_BUILD"
-      )
-      target_compile_definitions( "${LIBRARY_NAME}" PRIVATE "${LIBRARY_UPCASE_IDENTIFIER}_BUILD")
-
-      # output library with 'd' suffix when in windows (and creating a debug lib)
-      if( MSVC)
-         set_target_properties( "${LIBRARY_NAME}" PROPERTIES DEBUG_POSTFIX "d")
-      endif()
-      
       #
       # allow forward definitions in shared library
       #
       option( SHARED_UNRESOLVED_SYMBOLS "Shared libraries may have unresolved symbols" ON)
+      # output library with 'd' suffix when in windows (and creating a debug lib)
+      if( MSVC)
+         set_target_properties( "${LIBRARY_NAME}" PROPERTIES DEBUG_POSTFIX "d")
+      endif()
 
       include( LibraryAux OPTIONAL)
 
@@ -184,7 +204,7 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
          if( SHARED_UNRESOLVED_SYMBOLS)
             if( APPLE)
                target_link_libraries( "${LIBRARY_NAME}"
-                  "-undefined dynamic_lookup"
+                  PRIVATE "-undefined dynamic_lookup"
                )
             endif()
          endif()
@@ -203,7 +223,7 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
          include( PostSharedLibrary OPTIONAL) # additional hook
 
          target_link_libraries( "${LIBRARY_NAME}"
-            ${SHARED_LIBRARY_LIST}
+            PRIVATE ${SHARED_LIBRARY_LIST}
          )
 
          #
@@ -213,6 +233,78 @@ if( LIBRARY_SOURCES OR OTHER_LIBRARY_OBJECT_FILES OR OTHER_${LIBRARY_UPCASE_IDEN
          # set_target_properties( "${LIBRARY_NAME}" PROPERTIES SOVERSION 1)
          #
       endif()
+
+      #
+      # INTERFACE propagation for add_subdirectory consumers.
+      #
+      # In that world our dependencies resolve to cmake targets, and they have
+      # to be exported transitively so that a simple
+      # target_link_libraries( app PRIVATE <library>) suffices.
+      #
+      # In a mulle-craft build the dependencies are files, not targets, and
+      # are already linked in via PRIVATE above. They must not be re-exported:
+      # absolute paths would leak into consumer link lines.
+      #
+      # Ordinary dependencies can be propagated as target names. All-load
+      # dependencies are handled separately below because reducing them to
+      # ordinary target names loses their whole-archive semantics.
+      set( _INTERFACE_LIBS )
+      foreach( _item
+         ${DEPENDENCY_LIBRARIES}
+         ${DEPENDENCY_FRAMEWORKS}
+         ${OPTIONAL_DEPENDENCY_LIBRARIES}
+         ${OPTIONAL_DEPENDENCY_FRAMEWORKS}
+         ${STARTUP_DEPENDENCY_LIBRARIES}
+         ${STARTUP_DEPENDENCY_FRAMEWORKS}
+         ${OS_SPECIFIC_LIBRARIES}
+         ${OS_SPECIFIC_FRAMEWORKS}
+      )
+         if( TARGET "${_item}")
+            list( APPEND _INTERFACE_LIBS "${_item}")
+         endif()
+      endforeach()
+      unset( _item)
+
+      if( _INTERFACE_LIBS)
+         target_link_libraries( "${LIBRARY_NAME}" INTERFACE ${_INTERFACE_LIBS})
+      endif()
+      unset( _INTERFACE_LIBS)
+
+      # Keep all-load semantics for add_subdirectory consumers. The raw
+      # ALL_LOAD_* variables contain library names/targets; the FORCE_* lists
+      # are platform-specific linker fragments produced by AllLoadC and must
+      # not be propagated as ordinary CMake targets.
+      set( _INTERFACE_ALL_LOAD_LIBS )
+      if( CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+         foreach( _item
+            ${ALL_LOAD_DEPENDENCY_LIBRARIES}
+            ${ALL_LOAD_OPTIONAL_DEPENDENCY_LIBRARIES}
+            ${STARTUP_ALL_LOAD_DEPENDENCY_LIBRARIES}
+         )
+            if( TARGET "${_item}")
+               list( APPEND _INTERFACE_ALL_LOAD_LIBS
+                  "$<LINK_LIBRARY:WHOLE_ARCHIVE,${_item}>"
+               )
+            endif()
+         endforeach()
+         unset( _item)
+
+         if( _INTERFACE_ALL_LOAD_LIBS)
+            target_link_libraries( "${LIBRARY_NAME}" INTERFACE
+               ${_INTERFACE_ALL_LOAD_LIBS}
+            )
+         endif()
+      endif()
+      unset( _INTERFACE_ALL_LOAD_LIBS)
+
+      #
+      # MEMO: We deliberately do NOT export INCLUDE_DIRS here, one INTERFACE
+      #       include directory per constituent. InstallCMakeInclude already
+      #       exports a single amalgamated "${CMAKE_BINARY_DIR}/include", which
+      #       mirrors the layout an installed dependency has. Exporting the
+      #       source directories too would add dozens of -I options per
+      #       consumer and would leak our source layout.
+      #
 
       set( INSTALL_LIBRARY_TARGETS
          "${LIBRARY_NAME}"

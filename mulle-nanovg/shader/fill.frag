@@ -78,6 +78,21 @@ void main(void) {
         if (data[fid].texType == 2) color = vec4(color.x);
         color *= scissor;
         result = color * data[fid].innerCol;
+    } else if (data[fid].type == 4) { // ClearType subpixel text
+        vec4 color = texture(tex, ftcoord);
+        float deriv = dFdx(ftcoord.x);
+        if (deriv < 0.0)
+            color.xz = color.zx; // Text horizontally mirrored/rotated 180: flip R and B subpixels.
+        else if (deriv == 0.0) // Text rotated 90 degrees: average subpixels, disabling ClearType.
+            color = vec4((color.x + color.y + color.z) * (1.0 / 3.0));
+        if (color.w * scissor * data[fid].innerCol.w < (1.0 / 256.0))
+            discard;
+        result.xyz = color.xyz * data[fid].innerCol.xyz + (vec3(data[fid].innerCol.w) - color.xyz) * data[fid].outerCol.xyz;
+        result.w = data[fid].innerCol.w;
+        result *= scissor;
+    } else if (data[fid].type == 5) { // Color emoji
+        vec4 color = texture(tex, ftcoord);
+        result = color * scissor * data[fid].innerCol.a;
     }
     outColor = result;
 }

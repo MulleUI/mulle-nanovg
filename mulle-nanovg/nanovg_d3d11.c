@@ -84,7 +84,9 @@ enum D3DNVGshaderType {
 	NSVG_SHADER_FILLGRAD,
 	NSVG_SHADER_FILLIMG,
 	NSVG_SHADER_SIMPLE,
-	NSVG_SHADER_IMG
+	NSVG_SHADER_IMG,
+	NSVG_SHADER_CLEARTYPE,
+	NSVG_SHADER_EMOJI
 };
 
 struct D3DNVGshader {
@@ -1408,7 +1410,9 @@ static void D3Dnvg__renderTriangles(void* uptr, struct NVGpaint* paint, NVGcompo
 	if (call->uniformOffset == -1) goto error;
 	frag = nvg__fragUniformPtr(D3D, call->uniformOffset);
 	D3Dnvg__convertPaint(D3D, frag, paint, scissor, 1.0f, fringe, -1.0f);
-	frag->type = NSVG_SHADER_IMG;
+	frag->type = paint->isEmoji ? NSVG_SHADER_EMOJI
+	           : paint->clearType ? NSVG_SHADER_CLEARTYPE
+	           : NSVG_SHADER_IMG;
 
 	return;
 

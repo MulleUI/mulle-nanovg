@@ -21,25 +21,31 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "harfbuzz")
 else()
    if( NOT HARFBUZZ_LIBRARY)
-      find_library( HARFBUZZ_LIBRARY NAMES
-         harfbuzz
-      )
+      foreach( _TMP_HARFBUZZ_LIBRARY_TARGET harfbuzz)
+         if( TARGET ${_TMP_HARFBUZZ_LIBRARY_TARGET})
+            set( HARFBUZZ_LIBRARY ${_TMP_HARFBUZZ_LIBRARY_TARGET})
+            break()
+         endif()
+      endforeach()
+      if( NOT HARFBUZZ_LIBRARY)
+         find_library( HARFBUZZ_LIBRARY NAMES
+            harfbuzz
+         )
+      endif()
       message( STATUS "HARFBUZZ_LIBRARY is ${HARFBUZZ_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( HARFBUZZ_LIBRARY)
+   endif()
+   if( HARFBUZZ_LIBRARY)
          #
          # Add HARFBUZZ_LIBRARY to OS_SPECIFIC_LIBRARIES list.
          # Disable with: `mulle-sourcetree mark harfbuzz no-cmake-add`
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${HARFBUZZ_LIBRARY})
+         if( NOT ${HARFBUZZ_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+            list( APPEND OS_SPECIFIC_LIBRARIES ${HARFBUZZ_LIBRARY})
+         endif()
          # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark harfbuzz no-require-link`
-         message( SEND_ERROR "HARFBUZZ_LIBRARY was not found in harfbuzz")
-      endif()
+   else()
+      # Disable with: `mulle-sourcetree mark harfbuzz no-require-link`
+      message( SEND_ERROR "HARFBUZZ_LIBRARY was not found in harfbuzz")
    endif()
 endif()
 
@@ -54,24 +60,30 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "freetype")
 else()
    if( NOT FREETYPE_LIBRARY)
-      find_library( FREETYPE_LIBRARY NAMES
-         freetype
-      )
+      foreach( _TMP_FREETYPE_LIBRARY_TARGET freetype)
+         if( TARGET ${_TMP_FREETYPE_LIBRARY_TARGET})
+            set( FREETYPE_LIBRARY ${_TMP_FREETYPE_LIBRARY_TARGET})
+            break()
+         endif()
+      endforeach()
+      if( NOT FREETYPE_LIBRARY)
+         find_library( FREETYPE_LIBRARY NAMES
+            freetype
+         )
+      endif()
       message( STATUS "FREETYPE_LIBRARY is ${FREETYPE_LIBRARY}")
-      #
-      # The order looks ascending, but due to the way this file is read
-      # it ends up being descending, which is what we need.
-      #
-      if( FREETYPE_LIBRARY)
+   endif()
+   if( FREETYPE_LIBRARY)
          #
          # Add FREETYPE_LIBRARY to OS_SPECIFIC_LIBRARIES list.
          # Disable with: `mulle-sourcetree mark freetype no-cmake-add`
          #
-         list( APPEND OS_SPECIFIC_LIBRARIES ${FREETYPE_LIBRARY})
+         if( NOT ${FREETYPE_LIBRARY} IN_LIST OS_SPECIFIC_LIBRARIES)
+            list( APPEND OS_SPECIFIC_LIBRARIES ${FREETYPE_LIBRARY})
+         endif()
          # intentionally left blank
-      else()
-         # Disable with: `mulle-sourcetree mark freetype no-require-link`
-         message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetype")
-      endif()
+   else()
+      # Disable with: `mulle-sourcetree mark freetype no-require-link`
+      message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetype")
    endif()
 endif()

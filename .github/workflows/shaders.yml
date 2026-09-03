@@ -1,0 +1,170 @@
+name: Regenerate shader bytecode
+
+# Regenerates the precompiled shader blobs that cannot be produced on a Linux
+# or (fully) on a macOS dev box:
+#   - D3D11 pixel-shader DXBC headers  -> needs Windows SDK `fxc` (Windows only)
+#   - Metal iOS/tvOS/simulator bitcode -> needs the iOS/tvOS SDKs (macOS runner)
+#
+# Trigger manually from the Actions tab (or on a push that touches the shader
+# sources). The regenerated files are uploaded as build artifacts and, when run
+# on a branch, committed back automatically.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "mulle-nanovg/d3d11_shaders/*.hlsl"
+      - "mulle-nanovg/nanovg_mtl_shaders.metal"
+      - "mulle-nanovg/shader/*.vert"
+      - "mulle-nanovg/shader/*.frag"
+      - ".github/workflows/shaders.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  vulkan-spirv:
+    name: Vulkan SPIR-V (.inc via glslang)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install glslang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y glslang-tools
+
+      - name: Compile GLSL to SPIR-V and regenerate .inc
+        working-directory: mulle-nanovg/shader
+        run: |
+          cat > /tmp/gen_spirv.py <<'PY'
+          import subprocess, struct, os
+
+          def build(src, inc):
+              spv = "/tmp/%s.spv" % os.path.basename(src)
+              subprocess.run(["glslangValidator", "-V", src, "-o", spv], check=True)
+              data = open(spv, "rb").read()
+              words = struct.unpack("<%dI" % (len(data) // 4), data)
+              lines = []
+              for i in range(0, len(words), 8):
+                  chunk = words[i:i+8]
+                  lines.append(",".join("0x%08x" % w for w in chunk) + ",")
+              open(inc, "w").write("\n" + "\n".join(lines) + "\n")
+              print("wrote %s (%d words)" % (inc, len(words)))
+
+          build("fill.vert", "fill.vert.inc")
+          build("fill.frag", "fill.frag.inc")
+          PY
+          python3 /tmp/gen_spirv.py
+
+      - name: Upload regenerated SPIR-V includes
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulkan-spirv
+          path: mulle-nanovg/shader/*.inc
+
+      - name: Commit regenerated SPIR-V
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mulle-nanovg/shader/fill.vert.inc mulle-nanovg/shader/fill.frag.inc
+          if git diff --cached --quiet; then
+            echo "No SPIR-V changes."
+          else
+            git commit -m "ci: regenerate Vulkan SPIR-V includes (glslang)"
+            git push
+          fi
+
+  d3d11-fxc:
+    name: D3D11 pixel shaders (fxc / Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Locate fxc
+        id: fxc
+        shell: pwsh
+        run: |
+          $fxc = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter fxc.exe |
+                 Where-Object { $_.FullName -match '\\x64\\fxc.exe$' } |
+                 Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $fxc) { throw "fxc.exe not found" }
+          echo "FXC=$($fxc.FullName)" >> $env:GITHUB_OUTPUT
+          echo "Using $($fxc.FullName)"
+
+      - name: Compile pixel shaders (ps_4_0)
+        run: |
+          cd mulle-nanovg\d3d11_shaders
+          "${{ steps.fxc.outputs.FXC }}" /nologo /T ps_4_0 /E main /Fh D3D11PixelShader.h   /Vn g_D3D11PixelShader_Main   D3D11PixelShader.hlsl
+          "${{ steps.fxc.outputs.FXC }}" /nologo /T ps_4_0 /E main /Fh D3D11PixelShaderAA.h /Vn g_D3D11PixelShaderAA_Main D3D11PixelShaderAA.hlsl
+
+      - name: Upload regenerated headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: d3d11-shaders
+          path: |
+            mulle-nanovg/d3d11_shaders/D3D11PixelShader.h
+            mulle-nanovg/d3d11_shaders/D3D11PixelShaderAA.h
+
+      - name: Commit regenerated headers
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mulle-nanovg/d3d11_shaders/D3D11PixelShader.h mulle-nanovg/d3d11_shaders/D3D11PixelShaderAA.h
+          if (git diff --cached --quiet) { echo "No shader changes." }
+          else {
+            git commit -m "ci: regenerate D3D11 pixel shader bytecode (fxc)"
+            git push
+          }
+
+  metal-bitcode:
+    name: Metal iOS/tvOS/simulator bitcode
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile Metal library for each target
+        run: |
+          cd mulle-nanovg
+          shader=nanovg_mtl_shaders.metal
+
+          gen() {
+            local sdk="$1" out="$2" sym="$3"
+            xcrun -sdk "$sdk" metal -c "$shader" -o /tmp/mnvg.air
+            xcrun -sdk "$sdk" metal /tmp/mnvg.air -o /tmp/mnvg.metallib
+            xxd -i /tmp/mnvg.metallib \
+              | sed -E "s/unsigned char [A-Za-z0-9_]+\[\]/unsigned char ${sym}[]/" \
+              | sed -E "s/unsigned int [A-Za-z0-9_]+_len/unsigned int ${sym}_len/" \
+              > "mnvg_bitcode/${out}"
+            echo "wrote mnvg_bitcode/${out}"
+          }
+
+          gen macosx        macos.h     mnvg_bitcode_macos
+          gen iphoneos      ios.h       mnvg_bitcode_ios
+          gen iphonesimulator simulator.h mnvg_bitcode_simulator
+          gen appletvos     tvos.h      mnvg_bitcode_tvos
+
+      - name: Upload regenerated bitcode
+        uses: actions/upload-artifact@v4
+        with:
+          name: metal-bitcode
+          path: mulle-nanovg/mnvg_bitcode/*.h
+
+      - name: Commit regenerated bitcode
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mulle-nanovg/mnvg_bitcode/*.h
+          if git diff --cached --quiet; then
+            echo "No bitcode changes."
+          else
+            git commit -m "ci: regenerate Metal shader bitcode (all Apple SDKs)"
+            git push
+          fi

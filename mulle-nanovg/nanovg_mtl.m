@@ -65,6 +65,8 @@ typedef enum MNVGshaderType {
   MNVG_SHADER_FILLGRAD,
   MNVG_SHADER_FILLIMG,
   MNVG_SHADER_IMG,
+  MNVG_SHADER_CLEARTYPE,
+  MNVG_SHADER_EMOJI,
 } MNVGshaderType;
 
 enum MNVGcallType {
@@ -234,6 +236,19 @@ typedef struct MNVGfragUniforms MNVGfragUniforms;
                               width:(int*)width
                              height:(int*)height;
 
+- (int)renderGetTextureInfoForImage:(int)image
+                              flags:(int*)flags
+                               type:(int*)type
+                            texture:(void**)texture;
+
+- (int)renderDefineTextureWithWidth:(int)w
+                             height:(int)h
+                              flags:(int)flags
+                               type:(int)type
+                            texture:(void*)texture;
+
+- (int)renderForgetTexture:(int)image;
+
 - (void)renderStrokeWithPaint:(NVGpaint*)paint
            compositeOperation:(NVGcompositeOperationState)compositeOperation
                       scissor:(NVGscissor*)scissor
@@ -393,6 +408,30 @@ static int mtlnvg__renderGetTextureSize(void* uptr, int image, int* w, int* h) {
   return [mtl renderGetTextureSizeForImage:image width:w height:h];
 }
 
+static int mtlnvg__renderGetTextureInfo(void* uptr, int image, int* flags,
+                                        int* type, void** texture) {
+  MNVGcontext* mtl = (__bridge MNVGcontext*)uptr;
+  return [mtl renderGetTextureInfoForImage:image
+                                     flags:flags
+                                      type:type
+                                   texture:texture];
+}
+
+static int mtlnvg__renderDefineTexture(void* uptr, int w, int h, int flags,
+                                       int type, void* texture) {
+  MNVGcontext* mtl = (__bridge MNVGcontext*)uptr;
+  return [mtl renderDefineTextureWithWidth:w
+                                    height:h
+                                     flags:flags
+                                      type:type
+                                   texture:texture];
+}
+
+static int mtlnvg__renderForgetTexture(void* uptr, int image) {
+  MNVGcontext* mtl = (__bridge MNVGcontext*)uptr;
+  return [mtl renderForgetTexture:image];
+}
+
 static void mtlnvg__renderStroke(void* uptr, NVGpaint* paint,
                                  NVGcompositeOperationState compositeOperation,
                                  NVGscissor* scissor, float fringe,
@@ -466,6 +505,9 @@ NVGcontext* nvgCreateMTL(void* metalLayer, int flags) {
   params.renderDeleteTexture = mtlnvg__renderDeleteTexture;
   params.renderUpdateTexture = mtlnvg__renderUpdateTexture;
   params.renderGetTextureSize = mtlnvg__renderGetTextureSize;
+  params.renderGetTextureInfo = mtlnvg__renderGetTextureInfo;
+  params.renderDefineTexture = mtlnvg__renderDefineTexture;
+  params.renderForgetTexture = mtlnvg__renderForgetTexture;
   params.renderValidatePaintTexture = mtlnvg__renderValidatePaintTexture;
   params.renderViewport = mtlnvg__renderViewport;
   params.renderCancel = mtlnvg__renderCancel;
@@ -1530,6 +1572,55 @@ error:
   return 1;
 }
 
+- (int) renderGetTextureInfoForImage:(int)image
+                               flags:(int*)flags
+                                type:(int*)type
+                             texture:(void**)texture {
+  MNVGtexture* tex = [self findTexture:image];
+  if (tex == nil) return 0;
+  if (flags)
+    *flags = tex->flags;
+  if (type)
+    *type = tex->type;
+  if (texture)
+    *texture = (__bridge void*)tex->tex;   // opaque id<MTLTexture> handle
+  return 1;
+}
+
+//
+// Register an externally-created MTLTexture as a nanovg image, without
+// allocating a new GPU texture. Mirrors glnvg__renderDefineTexture: used to
+// wrap a framebuffer's target texture so it can be sampled/displayed.
+//
+- (int)renderDefineTextureWithWidth:(int)w
+                             height:(int)h
+                              flags:(int)flags
+                               type:(int)type
+                            texture:(void*)texture {
+  MNVGtexture* tex = [self allocTexture];
+  if (tex == nil) return 0;
+  tex->type  = type;
+  tex->flags = flags;
+  tex->tex   = (__bridge id<MTLTexture>)texture;
+  return tex->id;
+}
+
+//
+// Release a nanovg image entry that wraps an externally-owned texture, WITHOUT
+// deleting the underlying GPU texture. Mirrors glnvg__renderForgetTexture: the
+// framebuffer still owns the MTLTexture, so we only relinquish our reference
+// and free the slot for reuse.
+//
+- (int)renderForgetTexture:(int)image {
+  MNVGtexture* tex = [self findTexture:image];
+  if (tex == nil) return 0;
+  tex->flags |= NVG_IMAGE_NODELETE;  // do not delete GPU texture until reused
+  tex->tex    = nil;                 // drop our (bridged) reference; fb owns it
+  tex->sampler = nil;
+  tex->id     = 0;                   // free the slot, make it unfindable
+  return 1;
+}
+
 - (void) renderStrokeWithPaint:(NVGpaint*)paint
             compositeOperation:(NVGcompositeOperationState)compositeOperation
                        scissor:(NVGscissor*)scissor
@@ -1638,7 +1729,9 @@ error:
                       width:1.0f
                      fringe:fringe
                   strokeThr:-1.0f];
-  frag->type = MNVG_SHADER_IMG;
+  frag->type = paint->isEmoji ? MNVG_SHADER_EMOJI
+             : paint->clearType ? MNVG_SHADER_CLEARTYPE
+             : MNVG_SHADER_IMG;
 
   return;
 
@@ -1707,6 +1800,25 @@ error:
                devicePixelRatio:(float)devicePixelRatio {
   _viewPortSize = (vector_uint2){width * devicePixelRatio,
                                  height * devicePixelRatio};
+
+  // Keep the CAMetalLayer's drawableSize in lockstep with the viewport we are
+  // about to render. On a live resize the viewport (width/height) changes per
+  // frame; if the layer's drawableSize lags (it is otherwise set from a
+  // separate os_framebufferSize path at a different time), nextDrawable hands
+  // back a texture of the old size while nanovg emits geometry for the new
+  // size. The normalized coordinates then map into a sub-rect and the first
+  // (top) stripe fills the whole surface -> the window flashes solid on
+  // resize. Deriving the drawable size from the SAME width*devicePixelRatio
+  // here makes the drawable and the viewport consistent within the frame.
+  if (_metalLayer != nil) {
+    CGSize wanted = CGSizeMake((CGFloat)_viewPortSize.x,
+                               (CGFloat)_viewPortSize.y);
+    if (wanted.width > 0 && wanted.height > 0) {
+      CGSize current = _metalLayer.drawableSize;
+      if (current.width != wanted.width || current.height != wanted.height)
+        _metalLayer.drawableSize = wanted;
+    }
+  }
 
   dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
   for (MNVGbuffers* buffers in _cbuffers) {

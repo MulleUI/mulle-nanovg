@@ -67,7 +67,7 @@ int vknvgCreateImageFromHandle(NVGcontext* ctx, VkImageView imageView, int w, in
     }                                                                                                                                                                                                                                                                                                                          \
   }
 
-enum VKNVGshaderType { NSVG_SHADER_FILLGRAD, NSVG_SHADER_FILLIMG, NSVG_SHADER_SIMPLE, NSVG_SHADER_IMG };
+enum VKNVGshaderType { NSVG_SHADER_FILLGRAD, NSVG_SHADER_FILLIMG, NSVG_SHADER_SIMPLE, NSVG_SHADER_IMG, NSVG_SHADER_CLEARTYPE, NSVG_SHADER_EMOJI };
 
 typedef struct VKNVGtexture {
   VkSampler sampler;
@@ -1892,7 +1892,9 @@ static void vknvg_renderTriangles(void *uptr, NVGpaint *paint, NVGcompositeOpera
     goto error;
   frag = vknvg_fragUniformPtr(vk, call->uniformOffset);
   vknvg_convertPaint(vk, frag, paint, scissor, 1.0f, fringe, -1.0f);
-  frag->type = NSVG_SHADER_IMG;
+  frag->type = paint->isEmoji ? NSVG_SHADER_EMOJI
+             : paint->clearType ? NSVG_SHADER_CLEARTYPE
+             : NSVG_SHADER_IMG;
 
   return;
 
