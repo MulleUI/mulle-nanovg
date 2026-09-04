@@ -61,12 +61,16 @@ typedef enum MNVGvertexInputIndex {
   MNVG_VERTEX_INPUT_INDEX_VIEW_SIZE = 1,
 } MNVGvertexInputIndex;
 
+// Canonical nanovg shader-type numbering, shared across all backends
+// (GL nanovg_gl.h, D3D11 D3D11PixelShader*.hlsl, Metal nanovg_mtl_shaders.metal):
+//   0 FILLGRAD, 1 FILLIMG, 2 SIMPLE, 3 IMG, 4 CLEARTYPE, 5 EMOJI
 typedef enum MNVGshaderType {
-  MNVG_SHADER_FILLGRAD,
-  MNVG_SHADER_FILLIMG,
-  MNVG_SHADER_IMG,
-  MNVG_SHADER_CLEARTYPE,
-  MNVG_SHADER_EMOJI,
+  MNVG_SHADER_FILLGRAD,   // 0
+  MNVG_SHADER_FILLIMG,    // 1
+  MNVG_SHADER_SIMPLE,     // 2 (stencil; unused by Metal's shader, handled via pipeline)
+  MNVG_SHADER_IMG,        // 3
+  MNVG_SHADER_CLEARTYPE,  // 4
+  MNVG_SHADER_EMOJI,      // 5
 } MNVGshaderType;
 
 enum MNVGcallType {
@@ -518,6 +522,8 @@ NVGcontext* nvgCreateMTL(void* metalLayer, int flags) {
   params.renderDelete = mtlnvg__renderDelete;
   params.userPtr = (__bridge_retained void*)mtl;
   params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
+  params.clearType = flags & NVG_CLEARTYPE ? 1 : 0;
+  params.emoji = flags & NVG_EMOJI ? 1 : 0;
   
   // Set context type and state stack size based on flags
   switch (flags & (NVG_PATH_ONLY | NVG_FONT_ONLY)) {

@@ -1500,14 +1500,31 @@ static FONSglyph* fons__getGlyph(FONScontext* stash, FONSfont* font, unsigned in
 	g = fons__tt_getGlyphIndex(&font->font, codepoint);
 	// Try to find the glyph in fallback fonts.
 	if (g == 0) {
+		int monoFallback = -1;   // remember first monochrome match
+
 		for (i = 0; i < font->nfallbacks; ++i) {
 			FONSfont* fallbackFont = stash->fonts[font->fallbacks[i]];
 			int fallbackIndex = fons__tt_getGlyphIndex(&fallbackFont->font, codepoint);
 			if (fallbackIndex != 0) {
+				// For emoji-range codepoints, prefer a COLOR fallback even if an
+				// earlier monochrome fallback also has the glyph. Otherwise a
+				// monochrome emoji font registered ahead of a color one would
+				// always win and emoji would render without color.
+				if( codepoint > 0x2000 && ! fons__tt_isColorFont(&fallbackFont->font)) {
+					if( monoFallback == -1)
+						monoFallback = i;
+					continue;  // keep searching for a color fallback
+				}
 				g = fallbackIndex;
 				renderFont = fallbackFont;
 				break;
 			}
+		}
+		// No color fallback found; fall back to the first monochrome match.
+		if (g == 0 && monoFallback != -1) {
+			FONSfont* fallbackFont = stash->fonts[font->fallbacks[monoFallback]];
+			g = fons__tt_getGlyphIndex(&fallbackFont->font, codepoint);
+			renderFont = fallbackFont;
 		}
 		// It is possible that we did not find a fallback glyph.
 		// In that case the glyph index 'g' is 0, and we'll proceed below and cache empty glyph.

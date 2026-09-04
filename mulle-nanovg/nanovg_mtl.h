@@ -44,6 +44,10 @@ enum NVGcreateFlags {
   NVG_STENCIL_STROKES = 1 << 1,
   // Flag indicating that additional debug checks are done.
   NVG_DEBUG = 1 << 2,
+  // Flag enabling ClearType (subpixel) text rendering. Must match nanovg_gl.h.
+  NVG_CLEARTYPE = 1 << 5,
+  // Flag enabling color emoji rendering (RGBA glyph atlas). Must match nanovg_gl.h.
+  NVG_EMOJI = 1 << 8,
   // Flag indicating if double buffering scheme is used.
   NVG_DOUBLE_BUFFER = 1 << 12,
   // Flag indicating if triple buffering scheme is used.

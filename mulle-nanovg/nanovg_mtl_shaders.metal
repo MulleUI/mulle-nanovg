@@ -8,6 +8,14 @@
 // furnished to do so, subject to the following conditions:
 //
 // The above copyright notice and this permission notice shall be included in all
+//
+// Shader-type numbering is UNIFIED across all nanovg backends
+// (GL nanovg_gl.h, D3D11 D3D11PixelShader*.hlsl, Metal nanovg_mtl.m):
+//   0 = FILLGRAD, 1 = FILLIMG, 2 = SIMPLE (stencil), 3 = IMG,
+//   4 = CLEARTYPE, 5 = EMOJI
+// Metal's shader has no explicit type-2 (SIMPLE) branch: stencil-only draws
+// use a separate pipeline state, not a fragment shader-type.
+//
 // copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -112,7 +120,7 @@ fragment float4 fragmentShader(RasterizerData in [[stage_in]],
       color = float4(color.x);
     color *= scissor;
     return color * uniforms.innerCol;
-  } else if (uniforms.type == 3) {  // MNVG_SHADER_CLEARTYPE
+  } else if (uniforms.type == 4) {  // MNVG_SHADER_CLEARTYPE
     float4 color = texture.sample(sampler, in.ftcoord);
     float deriv = dfdx(in.ftcoord.x);
     if (deriv < 0.0)
@@ -127,10 +135,14 @@ fragment float4 fragmentShader(RasterizerData in [[stage_in]],
     result.w = uniforms.innerCol.w;
     result *= scissor;
     return result;
-  } else if (uniforms.type == 4) {  // MNVG_SHADER_EMOJI
+  } else if (uniforms.type == 5) {  // MNVG_SHADER_EMOJI
     float4 color = texture.sample(sampler, in.ftcoord);
+    // Color emoji atlas is straight (non-premultiplied) alpha; the nanovg
+    // blend expects premultiplied source. Premultiply so antialiased edges
+    // and transparent background blend correctly (matches the IMG path).
+    color = float4(color.xyz * color.w, color.w);
     return color * scissor * uniforms.innerCol.a;
-  } else {  // MNVG_SHADER_IMG
+  } else {  // MNVG_SHADER_IMG (type == 3)
     float4 color = texture.sample(sampler, in.ftcoord);
     if (uniforms.texType == 1)
       color = float4(color.xyz * color.w, color.w);
@@ -150,7 +162,7 @@ fragment float4 fragmentShaderAA(RasterizerData in [[stage_in]],
   if (scissor == 0)
     return float4(0);
 
-  if (uniforms.type == 2) {  // MNVG_SHADER_IMG
+  if (uniforms.type == 3) {  // MNVG_SHADER_IMG
     float4 color = texture.sample(sampler, in.ftcoord);
     if (uniforms.texType == 1)
       color = float4(color.xyz * color.w, color.w);
@@ -160,7 +172,7 @@ fragment float4 fragmentShaderAA(RasterizerData in [[stage_in]],
     return color * uniforms.innerCol;
   }
 
-  if (uniforms.type == 3) {  // MNVG_SHADER_CLEARTYPE
+  if (uniforms.type == 4) {  // MNVG_SHADER_CLEARTYPE
     float4 color = texture.sample(sampler, in.ftcoord);
     float deriv = dfdx(in.ftcoord.x);
     if (deriv < 0.0)
@@ -177,8 +189,12 @@ fragment float4 fragmentShaderAA(RasterizerData in [[stage_in]],
     return result;
   }
 
-  if (uniforms.type == 4) {  // MNVG_SHADER_EMOJI
+  if (uniforms.type == 5) {  // MNVG_SHADER_EMOJI
     float4 color = texture.sample(sampler, in.ftcoord);
+    // Color emoji atlas is straight (non-premultiplied) alpha; the nanovg
+    // blend expects premultiplied source. Premultiply so antialiased edges
+    // and transparent background blend correctly (matches the IMG path).
+    color = float4(color.xyz * color.w, color.w);
     return color * scissor * uniforms.innerCol.a;
   }
 

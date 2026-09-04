@@ -67,6 +67,13 @@ int vknvgCreateImageFromHandle(NVGcontext* ctx, VkImageView imageView, int w, in
     }                                                                                                                                                                                                                                                                                                                          \
   }
 
+// mulle-nanovg: matches the value used by the GL/D3D11/Metal backends so that
+// externally-owned textures wrapped via vknvgCreateImageFromHandle /
+// renderDefineTexture are not destroyed by nanovg.
+#ifndef NVG_IMAGE_NODELETE
+# define NVG_IMAGE_NODELETE  (1<<16)  // Do not delete the underlying Vulkan resources.
+#endif
+
 enum VKNVGshaderType { NSVG_SHADER_FILLGRAD, NSVG_SHADER_FILLIMG, NSVG_SHADER_SIMPLE, NSVG_SHADER_IMG, NSVG_SHADER_CLEARTYPE, NSVG_SHADER_EMOJI };
 
 typedef struct VKNVGtexture {
@@ -296,22 +303,30 @@ static int vknvg_deleteTexture(VKNVGcontext *vk, VKNVGtexture *tex) {
   VkDevice device = vk->createInfo.device;
   const VkAllocationCallbacks *allocator = vk->createInfo.allocator;
   if (tex) {
-    if (tex->view != VK_NULL_HANDLE) {
-      vkDestroyImageView(device, tex->view, allocator);
-      tex->view = VK_NULL_HANDLE;
-    }
+    // For externally-owned textures (wrapped via vknvgCreateImageFromHandle or
+    // renderDefineTexture) only the sampler is created by nanovg; the view,
+    // image and memory belong to the caller and must not be destroyed.
+    int noDelete = (tex->flags & NVG_IMAGE_NODELETE) != 0;
     if (tex->sampler != VK_NULL_HANDLE) {
       vkDestroySampler(device, tex->sampler, allocator);
       tex->sampler = VK_NULL_HANDLE;
     }
-    if (tex->image != VK_NULL_HANDLE) {
-      vkDestroyImage(device, tex->image, allocator);
-      tex->image = VK_NULL_HANDLE;
+    if (!noDelete) {
+      if (tex->view != VK_NULL_HANDLE) {
+        vkDestroyImageView(device, tex->view, allocator);
+      }
+      if (tex->image != VK_NULL_HANDLE) {
+        vkDestroyImage(device, tex->image, allocator);
+      }
+      if (tex->mem != VK_NULL_HANDLE) {
+        vkFreeMemory(device, tex->mem, allocator);
+      }
     }
-    if (tex->mem != VK_NULL_HANDLE) {
-      vkFreeMemory(device, tex->mem, allocator);
-      tex->mem = VK_NULL_HANDLE;
-    }
+    // Clear the slot either way so vknvg_allocTexture can reuse it
+    // (allocTexture looks for tex->image == VK_NULL_HANDLE).
+    tex->view = VK_NULL_HANDLE;
+    tex->image = VK_NULL_HANDLE;
+    tex->mem = VK_NULL_HANDLE;
     return 1;
   }
   return 0;
@@ -1569,6 +1584,116 @@ static int vknvg_renderGetTextureSize(void *uptr, int image, int *w, int *h) {
   }
   return 0;
 }
+
+// mulle-nanovg extensions: parity with the GL / D3D11 / Metal backends.
+//
+// The native "texture handle" exchanged through these callbacks is a
+// VkImageView (matching vknvgCreateImageFromHandle, which takes a VkImageView).
+// renderDefineTexture wraps a caller-owned view (marked NVG_IMAGE_NODELETE so
+// vknvg_deleteTexture will not destroy it); renderForgetTexture releases the
+// slot without destroying the underlying resources; renderGetTextureInfo
+// returns the stored flags/type and the native view handle.
+//
+// NOTE: the core dispatch in nanovg.c passes (w, h, imageFlags, type, texture)
+// to renderDefineTexture and (image, imageFlags, type, texture) to
+// renderGetTextureInfo -- i.e. flags before type -- so these signatures match
+// the D3D11 backend, not the (differently-named) typedef in nanovg.h.
+static int vknvg_renderDefineTexture(void *uptr, int w, int h, int flags, int type, void *texture) {
+#ifdef __cplusplus
+  auto *vk = static_cast<VKNVGcontext *>(uptr);
+#else
+  VKNVGcontext *vk = uptr;
+#endif
+  VKNVGtexture *tex = vknvg_allocTexture(vk);
+  if (tex == nullptr) {
+    return 0;
+  }
+
+  tex->width = w;
+  tex->height = h;
+  tex->type = type;
+  tex->flags = flags | NVG_IMAGE_NODELETE; // caller owns the underlying resources
+  tex->view = (VkImageView)(uintptr_t)texture;
+  tex->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  VkDevice device = vk->createInfo.device;
+  const VkAllocationCallbacks *allocator = vk->createInfo.allocator;
+
+  VkSamplerCreateInfo samplerCreateInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+  if (flags & NVG_IMAGE_NEAREST) {
+    samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
+    samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
+  } else {
+    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+  }
+  samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+  if (flags & NVG_IMAGE_REPEATX) {
+    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+  } else {
+    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  }
+  if (flags & NVG_IMAGE_REPEATY) {
+    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+  } else {
+    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  }
+  samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCreateInfo.mipLodBias = 0.0;
+  samplerCreateInfo.anisotropyEnable = VK_FALSE;
+  samplerCreateInfo.maxAnisotropy = 1;
+  samplerCreateInfo.compareEnable = VK_FALSE;
+  samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
+  samplerCreateInfo.minLod = 0.0;
+  samplerCreateInfo.maxLod = 0.0;
+  samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+  NVGVK_CHECK_RESULT(vkCreateSampler(device, &samplerCreateInfo, allocator, &tex->sampler));
+
+  return vknvg_textureId(vk, tex);
+}
+
+static int vknvg_renderForgetTexture(void *uptr, int image) {
+#ifdef __cplusplus
+  auto *vk = static_cast<VKNVGcontext *>(uptr);
+#else
+  VKNVGcontext *vk = uptr;
+#endif
+  VKNVGtexture *tex = vknvg_findTexture(vk, image);
+  if (tex == nullptr) {
+    return 0;
+  }
+  // Mark as caller-owned then delete: vknvg_deleteTexture will only destroy the
+  // sampler nanovg created and clear the slot, leaving the caller's resources.
+  tex->flags |= NVG_IMAGE_NODELETE;
+  if (tex->mapped) {
+    vkUnmapMemory(vk->createInfo.device, tex->mem);
+    tex->mapped = false;
+  }
+  return vknvg_deleteTexture(vk, tex);
+}
+
+static int vknvg_renderGetTextureInfo(void *uptr, int image, int *p_flags, int *p_type, void **p_texture) {
+#ifdef __cplusplus
+  auto *vk = static_cast<VKNVGcontext *>(uptr);
+#else
+  VKNVGcontext *vk = uptr;
+#endif
+  VKNVGtexture *tex = vknvg_findTexture(vk, image);
+  if (tex == nullptr) {
+    return 0;
+  }
+  if (p_flags) {
+    *p_flags = tex->flags;
+  }
+  if (p_type) {
+    *p_type = tex->type;
+  }
+  if (p_texture) {
+    *p_texture = (void *)(uintptr_t)tex->view;
+  }
+  return 1;
+}
 static void vknvg_renderViewport(void *uptr, float width, float height, float devicePixelRatio) {
 #ifdef __cplusplus
   auto *vk = static_cast<VKNVGcontext *>(uptr);
@@ -1997,6 +2122,9 @@ static NVGcontext *nvgCreateVk(VKNVGCreateInfo createInfo, int flags, VkQueue qu
   params.renderTriangles = vknvg_renderTriangles;
   params.renderDelete = vknvg_renderDelete;
   params.renderValidatePaintTexture = vknvg_renderValidatePaintTexture;
+  params.renderDefineTexture = vknvg_renderDefineTexture;
+  params.renderForgetTexture = vknvg_renderForgetTexture;
+  params.renderGetTextureInfo = vknvg_renderGetTextureInfo;
   params.userPtr = vk;
   params.edgeAntiAlias = flags & NVG_ANTIALIAS ? 1 : 0;
   params.contextType = NVG_FULL_CONTEXT;

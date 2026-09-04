@@ -31,7 +31,7 @@ export MULLE_CRAFT_PLATFORMS="linux"
 #
 #
 #
-export MULLE_CRAFT_TOOLCHAIN__WINDOWS="toolchain-llvm-mingw-clang"
+
 
 
 #
