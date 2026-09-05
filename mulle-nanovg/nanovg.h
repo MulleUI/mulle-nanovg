@@ -678,6 +678,7 @@ void nvgStroke(NVGcontext* ctx);
 // Call this on a NVG_PATH_ONLY context to create tesselation info. This is
 // only useful to execute on "path" before calling nvgCopyPath (see below).
 // If there is lots of tesselation generated pre-computing this can be a win
+MULLE__NANOVG_GLOBAL
 void  nvgPrecompilePath(NVGcontext *ctx);
 
 // Reuse an existing path contained in another context, which is most likely
