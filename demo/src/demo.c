@@ -1,17 +1,24 @@
 #include "demo.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #ifdef NANOVG_GLEW
 #  include <GL/glew.h>
 #endif
-#include <GLFW/glfw3.h>
+#ifndef NVG_ANDROID
+#  include <GLFW/glfw3.h>
+#endif
 #include "demo.h"
+
+#ifdef NVG_ANDROID
+#  include "android_assets.h"
+#endif
 
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
-#elif !defined(__MINGW32__)
+#elif !defined(__MINGW32__) && !defined(NVG_ANDROID)
 #include <iconv.h>
 #endif
 
@@ -810,13 +817,77 @@ int loadDemoData(NVGcontext* vg, DemoData* data)
 	for (i = 0; i < 12; i++) {
 		char file[128];
 		snprintf(file, 128, "images/image%d.jpg", i+1);
+#ifdef NVG_ANDROID
+		{
+			int size = 0;
+			unsigned char* buf = androidAssetLoad(file, &size);
+			if (buf == NULL) {
+				printf("Could not load %s.\n", file);
+				return -1;
+			}
+			data->images[i] = nvgCreateImageMem(vg, 0, buf, size);
+			free(buf);
+			if (data->images[i] == 0) {
+				printf("Could not load %s.\n", file);
+				return -1;
+			}
+		}
+#else
 		data->images[i] = nvgCreateImage(vg, file, 0);
 		if (data->images[i] == 0) {
 			printf("Could not load %s.\n", file);
 			return -1;
 		}
+#endif
 	}
 
+#ifdef NVG_ANDROID
+	{
+		int size = 0;
+		unsigned char* buf;
+
+		buf = androidAssetLoad("entypo.ttf", &size);
+		if (buf == NULL) {
+			printf("Could not add font icons.\n");
+			return -1;
+		}
+		data->fontIcons = nvgCreateFontMem(vg, "icons", buf, size, 1);
+		if (data->fontIcons == -1) {
+			printf("Could not add font icons.\n");
+			return -1;
+		}
+		buf = androidAssetLoad("Roboto-Regular.ttf", &size);
+		if (buf == NULL) {
+			printf("Could not add font italic.\n");
+			return -1;
+		}
+		data->fontNormal = nvgCreateFontMem(vg, "sans", buf, size, 1);
+		if (data->fontNormal == -1) {
+			printf("Could not add font italic.\n");
+			return -1;
+		}
+		buf = androidAssetLoad("Roboto-Bold.ttf", &size);
+		if (buf == NULL) {
+			printf("Could not add font bold.\n");
+			return -1;
+		}
+		data->fontBold = nvgCreateFontMem(vg, "sans-bold", buf, size, 1);
+		if (data->fontBold == -1) {
+			printf("Could not add font bold.\n");
+			return -1;
+		}
+		buf = androidAssetLoad("NotoEmoji-Regular.ttf", &size);
+		if (buf == NULL) {
+			printf("Could not add font emoji.\n");
+			return -1;
+		}
+		data->fontEmoji = nvgCreateFontMem(vg, "emoji", buf, size, 1);
+		if (data->fontEmoji == -1) {
+			printf("Could not add font emoji.\n");
+			return -1;
+		}
+	}
+#else
 	data->fontIcons = nvgCreateFont(vg, "icons", "./entypo.ttf");
 	if (data->fontIcons == -1) {
 		printf("Could not add font icons.\n");
@@ -837,6 +908,7 @@ int loadDemoData(NVGcontext* vg, DemoData* data)
 		printf("Could not add font emoji.\n");
 		return -1;
 	}
+#endif
 	nvgAddFallbackFontId(vg, data->fontNormal, data->fontEmoji);
 	nvgAddFallbackFontId(vg, data->fontBold, data->fontEmoji);
 

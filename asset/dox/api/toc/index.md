@@ -39,7 +39,7 @@ Create with `NVG_PATH_ONLY` or `NVG_FONT_ONLY` flags.
 Solid shapes wound counter-clockwise (`NVG_CCW`/`NVG_SOLID`), holes wound clockwise (`NVG_CW`/`NVG_HOLE`). Use `nvgPathWinding()` after defining a path to mark holes.
 
 ### Font System
-Fonts are loaded by name from `.ttf`/`.ttc` files or memory. Glyphs are rasterized into a texture atlas (`fontstash`). Fallback fonts provide glyph substitution (used for emoji). The default backend uses FreeType; stb_truetype is available with `-DFONS_USE_STB_TRUETYPE`.
+Fonts are loaded by name from `.ttf`/`.ttc` files or memory. Glyphs are rasterized into a texture atlas (`fontstash`). Fallback fonts provide glyph substitution (used for emoji). For emoji-range codepoints (U+2000 and above) the fallback lookup prefers a *color* font (checked via `fons__tt_isColorFont`): a monochrome fallback is remembered but only selected if no color fallback has the glyph, so a monochrome emoji font registered before a color one does not win. The default backend uses FreeType; stb_truetype is available with `-DFONS_USE_STB_TRUETYPE`.
 
 ### Backend Selection
 Each backend is activated with a `#define` before including its header, providing a `nvgCreate*()` constructor. See Section 3.2-3.6 for per-backend details.
@@ -460,7 +460,14 @@ NVGcontext* nvgCreateMTL(void* metalLayer, int flags);
 void nvgDeleteMTL(NVGcontext* ctx);
 ```
 
-Metal-specific create flags: `NVG_DOUBLE_BUFFER` (1<<12), `NVG_TRIPLE_BUFFER` (1<<13), `NVG_PATH_ONLY` (1<<14), `NVG_FONT_ONLY` (1<<15).
+Metal create flags match the GL/rlgl enum for interface-level flags: `NVG_ANTIALIAS` (1<<0), `NVG_STENCIL_STROKES` (1<<1), `NVG_DEBUG` (1<<2), `NVG_CLEARTYPE` (1<<5), `NVG_EMOJI` (1<<8), `NVG_DOUBLE_BUFFER` (1<<12), `NVG_TRIPLE_BUFFER` (1<<13), `NVG_PATH_ONLY` (1<<14), `NVG_FONT_ONLY` (1<<15). `NVG_CLEARTYPE` and `NVG_EMOJI` were added for ClearType/color-emoji parity with the GL backend.
+
+**Additional image flag:**
+```c
+enum NVGimageFlagsMetal {
+  NVG_IMAGE_NODELETE = 1 << 16, // Do not delete Metal texture handle.
+};
+```
 
 **Framebuffer functions:**
 ```c
@@ -553,6 +560,12 @@ static void nvgDeleteVk(NVGcontext *ctx);
 ```c
 int vknvgCreateImageFromHandle(NVGcontext* ctx, VkImageView imageView, int w, int h, int imageFlags);
 ```
+
+**External texture ownership (mulle-nanovg addition):** The Vulkan backend implements the `renderDefineTexture`/`renderForgetTexture`/`renderGetTextureInfo` callbacks for parity with the GL/D3D11/Metal backends, so the core `nvgCreateImageTexture()`/`nvgForgetImageTexture()`/`nvgImageTextureInfo()` work on Vulkan too. The native "texture handle" exchanged through these APIs is a `VkImageView`. Owned textures are marked:
+```c
+#define NVG_IMAGE_NODELETE  (1<<16)  // Do not delete the underlying Vulkan resources.
+```
+When `NVG_IMAGE_NODELETE` is set (which `vknvgCreateImageFromHandle` and `renderDefineTexture` always do), `vknvg_deleteTexture` destroys only the nanovg-created `VkSampler` and clears the texture slot; the caller's `VkImageView`/`VkImage`/`VkDeviceMemory` are left intact. `renderGetTextureInfo` returns the stored flags, type, and the view handle.
 
 `VKNVGCreateInfo` contains Vulkan device, renderpass, command buffer, swapchain info, queue family index, allocator callbacks, and optional extensions (`VkNvgExt`). `VkNvgExt` has fields for `dynamicState`, `colorBlendEquation`, and `colorWriteMask` requiring `VK_EXT_EXTENDED_DYNAMIC_STATE` and `VK_EXT_EXTENDED_DYNAMIC_STATE_3` extensions.
 
@@ -708,6 +721,7 @@ enum NVGtexture       { NVG_TEXTURE_ALPHA = 0x01, NVG_TEXTURE_RGBA = 0x02 };
 - Color emoji requires `NVG_EMOJI` flag for RGBA atlas; the emoji font should be set via `nvgSetEmojiFont()`.
 - `NVG_PATH_CONTEXT` does not support font or image operations.
 - Do not delete an image while it's used in a paint in the current frame.
+- Images created from caller-owned handles (`nvgCreateImageTexture()`, `vknvgCreateImageFromHandle()`, `nvglCreateImageFromHandle*()`) are marked `NVG_IMAGE_NODELETE`. Deleting the nanovg image releases only nanovg's internal slot/sampler — never the caller's native texture/view. The caller retains ownership and must clean it up itself.
 
 ### Idiomatic Patterns
 - **FBO rendering:** Call `nvgChangeFrame()` to switch render targets mid-frame; then `nvgEndFrame()` at the end.
