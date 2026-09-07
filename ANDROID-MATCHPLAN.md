@@ -8,7 +8,7 @@
 > [ANDROID-HOWTO-C-ONLY.md](ANDROID-HOWTO-C-ONLY.md) — a step-by-step
 > C-only build/run/dev-loop guide.
 
-## Status — 2026-09-06: phases 0–4 DONE ✅, step 2 (fonts) DONE ✅, step 3 (ClearType) DONE ✅
+## Status — 2026-09-06: phases 0–4 DONE ✅, step 2 (fonts) DONE ✅, step 3 (ClearType) DONE ✅; 2026-09-07: lldb attach DONE ✅
 
 The mulle-nanovg demo **compiles and runs on Android**. A signed, multi-ABI
 APK (`android/build/app-debug.apk`) is built in Docker (SDK + NDK r29 +
@@ -27,8 +27,8 @@ configuration — instead of the bootstrap stb_truetype build. **harfbuzz
 14.4.0** is cross-compiled and linked too, ready for future text shaping.
 See "Phase 4.5 — Fonts" below.
 
-Phase 5 (Vulkan, gdb, CI, release signing) is intentionally **deferred** —
-see below.
+Phase 5 stretch items are mostly **deferred** — except **lldb attach**, which
+landed 2026-09-07 (`android/debug.sh`). See below.
 
 ## Goal
 
@@ -84,6 +84,7 @@ android/
 ├── docker-run.sh               # build image + run container with KVM/usb passthrough
 ├── build.sh                    # cross-compile (multi-ABI) + package + sign APK
 ├── build-libs.sh               # cross-compile static freetype + harfbuzz (auto-run by build.sh, incremental)
+├── debug.sh                    # attach NDK lldb to the running app on the emulator (x86_64 build)
 ├── run.sh                      # emulator | boot-wait | install | logcat | all
 ├── jni/
 │   ├── CMakeLists.txt          # NDK toolchain build (nanovg lib + app target)
@@ -314,22 +315,77 @@ Notes for later:
 - Toggle off by removing `NVG_CLEARTYPE` from the create flags in
   `main-android.c` and deleting the `draw_cleartype_strip` call.
 
-### Phase 5 — Stretch ⏸ deferred (not started)
+### Phase 5 — Stretch ⏸ partially done (lldb ✅, rest deferred)
 
-Deliberately not attempted in this session: each is a multi-hour effort with
-its own unknowns, and phases 0–4.5 already hit the goal (compile + run on
-Android + default font stack). Documented starting points:
+Mostly not attempted: each is a multi-hour effort with its own unknowns, and
+phases 0–4.5 already hit the goal (compile + run on Android + default font
+stack). Documented starting points:
 
-- **Vulkan backend** (`nvgCreateVk`, minSdk 24): would need VkInstance/Device/
-  swapchain setup like the desktop `main-linux-vulkan.c`, plus a separate
-  activity or build flag. ANDROID.md has the diff sketch.
-- **ndk-gdb / lldb**: attach to the running app inside the container
-  (`adb forward` + lldb-server from the NDK).
+- **ndk-gdb / lldb** ✅ done 2026-09-07 — see below.
+- **Vulkan backend** (`nvgCreateVulkan`, minSdk 24): would need
+  VkInstance/Device/swapchain setup like the desktop
+  `main-linux-vulkan.c`, plus a separate activity or build flag. ANDROID.md
+  has the diff sketch.
 - **CI**: GitHub Actions building `android/` with the same Dockerfile.
 - **Release-signed APK** (Phase 4 carry-over): swap `debug.keystore` for a
   release key in `build.sh`.
 - **NotoColorEmoji.ttf (11 MB)**: load on demand or exclude if APK size
   matters; the demo only uses `NotoEmoji-Regular.ttf` today.
+
+### Phase 5.1 — lldb attach to the running app ✅ done 2026-09-07
+
+Goal: debug the running app inside the container from the NDK's lldb, with
+symbols and source lines, against a logcat-clean app.
+
+- [x] `android/debug.sh`: builds + installs the **x86_64** debuggable APK,
+      launches it, pushes the NDK `lldb-server`, starts it in **platform
+      server** mode on a device unix-abstract socket, and execs the host
+      `lldb` client already connected/attached. Run it interactively:
+      `cd android && ./debug.sh` → lldb prompt on the live app.
+- [x] Manifest: added `android:debuggable="true"` (needed for attach support
+      and `run-as`).
+
+**Checkpoint ✅**: live attach, fully symbolized backtrace, real breakpoint
+hit, clean recovery after detach. Proof sequence (all in the container):
+
+```
+./debug.sh                                  # build+install+launch, lldb attached
+(lldb) breakpoint set --name nvgBeginFrame  # hit every frame
+  Breakpoint 1: where = libnanovg-demo.so`nvgBeginFrame + 28 ...
+(lldb) continue                             # stops at breakpoint 1.1
+(lldb) bt
+#0 nvgBeginFrame inlined nvgBeginFrame_enter ... nanovg-trace-support.inc:17
+#2 engine_draw_frame at main-android.c:222
+#3 android_main at main-android.c:359
+#4 android_app_entry at android_native_app_glue.c:226
+```
+
+After `quit` lldb detaches; the app resumes rendering (no crash, animation
+keeps running, screenshots differ over time).
+
+Notes for later:
+
+- **Emulator ABI for debugging is x86_64, not arm64**: the app normally runs
+  arm64-v8a under ARM translation on the x86_64 system image. `lldb-server`
+  (aarch64) under that translation SIGSEGVs the moment it tries to ptrace
+  (both race conditions in `gdbserver` attach mode). The x86_64 build runs
+  natively and is ptrace-able. Real-device debugging instead uses the device
+  ABI (arm64) - the mechanism is identical, only `DEBUG_ABI` changes.
+- **The platform spawns `/data/local/tmp/lldb-server`** (hardcoded) as its
+  gdbserver. If an ARM `lldb-server` is left there, the platform spawns the
+  wrong ABI and you get "connection shut down while waiting for initial
+  handshake" plus an `ndk_translation` crash in logcat. `debug.sh` pushes the
+  right ABI over that path every time, so this is self-healing.
+- The build is `Release` but the NDK keeps `.debug_*` and `.symtab` in the
+  .so (never stripped), so named breakpoints and source lines work with zero
+  extra build work. `libnanovg-demo.so` shows up as module 317/319 in
+  `image list`.
+- `lldb` client needs `LD_LIBRARY_PATH` + `PYTHONHOME` pointing at the NDK's
+  `python3/` side - set in `debug.sh`.
+- The debug APK genuinely differs from the deliverable: the ABI list is
+  overridden to `x86_64` and `build/app-debug.apk` is overwritten by
+  `debug.sh`. Rebuild with `./build.sh` (default ABIs `arm64-v8a
+  armeabi-v7a`) to restore the standard APK.
 
 ## Running the loop (end state)
 
@@ -338,6 +394,7 @@ cd MulleUI/mulle-nanovg/android
 ./docker-run.sh    # build image, start container with KVM + usb
 ./build.sh         # cross-compile + package APK inside container
 ./run.sh           # boot emulator, install, launch, logcat
+./debug.sh         # (after run.sh) attach NDK lldb to the running app
 ```
 
 Rebuild cycle ≈ seconds for the native lib after the first container build.
@@ -360,6 +417,17 @@ Rebuild cycle ≈ seconds for the native lib after the first container build.
    cache) or daemon-managed (`docker run -d` keeps the emulator alive).
 7. **This fork guards GLES3 declarations behind the implementation macro** —
    the backend must be instantiated in the TU that calls `nvgCreateGLES3`.
+8. **Translated ARM apps can't be ptraced**: on the x86_64 emulator the arm64
+   build runs under `ndk_translation`; any aarch64 `lldb-server` SIGSEGVs when
+   attaching. Debug native ABI builds (x86_64 on this emulator) instead —
+   `android/debug.sh` handles this.
+9. **The platform server hardcodes `/data/local/tmp/lldb-server`** as the
+   gdbserver it spawns — keep the native-ABI `lldb-server` at exactly that
+   path or attach fails with "connection shut down while waiting for initial
+   handshake".
+10. **Attach needs `android:debuggable="true"`** in the manifest; without it
+    the NDK attach support is absent (run-as also fails). It's a debug-keystore
+    APK, so the flag is a no-op for release concerns.
 
 ## Risks & open questions
 
