@@ -177,7 +177,10 @@ jobs:
           gen macosx          macos.h     mnvg_bitcode_macos     macos-metal2.4
           gen iphoneos        ios.h       mnvg_bitcode_ios       ios-metal2.4
           gen iphonesimulator simulator.h mnvg_bitcode_simulator ios-metal2.4
-          gen appletvos       tvos.h      mnvg_bitcode_tvos      tvos-metal2.4
+          # tvOS disabled for now: the runner's `metal` rejects -std=tvos-metal2.4
+          # ("invalid value 'tvos-metal2.4'"). Re-enable once the runner's Xcode
+          # toolchain accepts a tvOS Metal language std again.
+          # gen appletvos       tvos.h      mnvg_bitcode_tvos      tvos-metal2.4
 
       - name: Upload regenerated bitcode
         uses: actions/upload-artifact@v4
