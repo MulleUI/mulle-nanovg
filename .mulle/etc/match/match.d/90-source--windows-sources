@@ -1,0 +1,3 @@
+# Windows-only sources (DirectX 11 backend).
+*_d3d11.c
+*_dx11.c

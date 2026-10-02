@@ -1,0 +1,3 @@
+# OpenGL / GLES backend public API header(s).
+*_gl.h
+*_gl_*.h

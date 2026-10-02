@@ -1,0 +1,4 @@
+# GLSL shader sources (OpenGL / GLES / rlgl backends).
+*.vert
+*.frag
+*.glsl

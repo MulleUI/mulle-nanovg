@@ -1,0 +1,3 @@
+# Metal backend public API header(s). Darwin only (future install gating).
+*_mtl.h
+*_mtl_*.h

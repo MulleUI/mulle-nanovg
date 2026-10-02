@@ -2,7 +2,7 @@
 
 Part of [MulleUI](https://github.com/MulleUI) — UIKit-shaped modular GUI libraries for mulle-objc.
 
-#### 🧿 A better NanoVG with OpenGL, Metal, Vulkan, DirectX 11 backends.
+#### Part of [MulleUI](https://github.com/MulleUI) — UIKit-shaped modular GUI libraries for mulle-objc.
 
 - Plus additional API
 - Plus additional code to bring all backends feature-wise up to par.

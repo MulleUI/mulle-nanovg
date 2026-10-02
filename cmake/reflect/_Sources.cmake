@@ -8,11 +8,23 @@ if( MULLE_TRACE_INCLUDE)
 endif()
 
 #
+# contents selected with patternfile ??-source--darwin-sources
+#
+set( DARWIN_SOURCES
+mulle-nanovg/nanovg_mtl.m
+)
+
+#
 # contents selected with patternfile ??-source--sources
 #
 set( SOURCES
 mulle-nanovg/nanovg.c
-mulle-nanovg/nanovg_d3d11.c
-mulle-nanovg/nanovg_mtl.m
 mulle-nanovg/nanovg-trace-functions.c
+)
+
+#
+# contents selected with patternfile ??-source--windows-sources
+#
+set( WINDOWS_SOURCES
+mulle-nanovg/nanovg_d3d11.c
 )

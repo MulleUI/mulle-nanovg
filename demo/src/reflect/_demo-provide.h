@@ -3,18 +3,18 @@
  *   `mulle-sde reflect` and any edits will be lost.
  *   Suppress generation of this file with:
  *
- *      mulle-sde environment set MULLE_MATCH_TO_C_C_HEADERS_FILE DISABLE
+ *      mulle-sde environment --global set MULLE_MATCH_TO_C_C_HEADERS_FILE DISABLE
  *
  *   To not let mulle-match-to-c generate any header files:
  *
- *      mulle-sde environment set MULLE_MATCH_TO_C_RUN DISABLE
+ *      mulle-sde environment --global set MULLE_MATCH_TO_C_RUN DISABLE
  */
 #ifndef _demo__provide_h__
 #define _demo__provide_h__
 
 
-#include "D3D11PixelShaderAA.h"
 #include "D3D11PixelShader.h"
+#include "D3D11PixelShaderAA.h"
 #include "D3D11VertexShader.h"
 #include "demo-version.h"
 #include "glad.h"
@@ -26,15 +26,15 @@
 #include "tvos.h"
 #include "mulle-nanovg.h"
 #include "mulle-rlgl.h"
-#include "nanovg_d3d11.h"
+#include "nanovg.h"
 #include "nanovg-framebuffer.h"
+#include "nanovg-trace-functions.h"
+#include "nanovg_d3d11.h"
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
-#include "nanovg.h"
 #include "nanovg_mtl.h"
 #include "nanovg_rlgl.h"
 #include "nanovg_rlgl_utils.h"
-#include "nanovg-trace-functions.h"
 #include "nanovg_vk.h"
 #include "nanovg_vk_utils.h"
 #include "rlgl.h"

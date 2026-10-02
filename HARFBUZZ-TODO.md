@@ -43,9 +43,10 @@ that the current mulle-nanovg tree does not. Finding that layer is the task.
   dependency: `cmake/reflect/_Libraries.cmake` (find_library only) and
   `dependency/etc/craftorder` (`stash/harfbuzz;...no-load...` on Linux
   desktop). No C code consumes it.
-- Android (this repo): freetype built with `FT_DISABLE_HARFBUZZ=TRUE`;
-  harfbuzz 14.4.0 cross-compiled statically but linked-unused (linker drops
-  it). See `android/build-libs.sh` and `ANDROID-MATCHPLAN.md` Phase 4.5.
+- Android (this repo): the library cross-compiles for Android via
+  `mulle-sde craft --platform android`; freetype + harfbuzz link through the
+  mulle dependency chain (`libfreetyped.a` / `libharfbuzz.a`). harfbuzz is
+  linked but has no consumer code, so the linker drops it. See `ANDROID.md`.
 
 ## The reframe (two mechanisms, often conflated)
 

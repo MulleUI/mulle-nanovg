@@ -1,3 +1,12 @@
+### 0.1.1
+
+feature: add platform-specific backend routing and Android support
+
+* Metal, DirectX 11 and Vulkan backend sources are now selected automatically per platform
+* backend public headers (GL, rlgl, Metal, D3D11, Vulkan) are classified and installed individually
+* Android is documented as supported, with the library cross-compiling via `mulle-sde craft --platform android`
+* add `android/debug.sh` to attach the NDK lldb to the running demo on an emulator
+
 ## 0.1.0
 
 

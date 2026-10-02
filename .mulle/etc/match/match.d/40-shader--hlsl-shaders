@@ -1,0 +1,2 @@
+# HLSL shader sources (Windows / DirectX 11).
+*.hlsl

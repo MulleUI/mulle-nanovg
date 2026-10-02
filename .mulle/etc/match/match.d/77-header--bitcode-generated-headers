@@ -1,0 +1,3 @@
+# Generated Metal bitcode blobs (Darwin). Not installed as public API;
+# these are build products #included by the Metal backend.
+**/mnvg_bitcode/*.h

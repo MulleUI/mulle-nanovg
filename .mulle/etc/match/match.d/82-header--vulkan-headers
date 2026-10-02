@@ -1,0 +1,3 @@
+# Vulkan backend public API header(s).
+*_vk.h
+*_vk_*.h

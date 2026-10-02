@@ -11,12 +11,44 @@ endif()
 # contents are derived from the file locations
 
 set( INCLUDE_DIRS
+mulle-nanovg/mnvg_bitcode
+mulle-nanovg
 mulle-nanovg/generic
+mulle-nanovg/external
 mulle-nanovg/reflect
 mulle-nanovg/d3d11_shaders
-mulle-nanovg/external
-mulle-nanovg
-mulle-nanovg/mnvg_bitcode
+)
+
+#
+# contents selected with patternfile ??-header--bitcode-generated-headers
+#
+set( BITCODE_GENERATED_HEADERS
+mulle-nanovg/mnvg_bitcode/ios.h
+mulle-nanovg/mnvg_bitcode/macos.h
+mulle-nanovg/mnvg_bitcode/simulator.h
+mulle-nanovg/mnvg_bitcode/tvos.h
+)
+
+#
+# contents selected with patternfile ??-header--d3d11-headers
+#
+set( D3D11_HEADERS
+mulle-nanovg/nanovg_d3d11.h
+)
+
+#
+# contents selected with patternfile ??-header--gl-headers
+#
+set( GL_HEADERS
+mulle-nanovg/nanovg_gl.h
+mulle-nanovg/nanovg_gl_utils.h
+)
+
+#
+# contents selected with patternfile ??-header--metal-headers
+#
+set( METAL_HEADERS
+mulle-nanovg/nanovg_mtl.h
 )
 
 #
@@ -30,7 +62,17 @@ mulle-nanovg/generic/include-private.h
 # contents selected with patternfile ??-header--private-headers
 #
 set( PRIVATE_HEADERS
+mulle-nanovg/external/glad.h
 mulle-nanovg/reflect/_mulle-nanovg-include-private.h
+)
+
+#
+# contents selected with patternfile ??-header--product-headers
+#
+set( PRODUCT_HEADERS
+mulle-nanovg/d3d11_shaders/D3D11PixelShaderAA.h
+mulle-nanovg/d3d11_shaders/D3D11PixelShader.h
+mulle-nanovg/d3d11_shaders/D3D11VertexShader.h
 )
 
 #
@@ -53,33 +95,33 @@ mulle-nanovg/generic/include.h
 # contents selected with patternfile ??-header--public-headers
 #
 set( PUBLIC_HEADERS
-mulle-nanovg/d3d11_shaders/D3D11PixelShaderAA.h
-mulle-nanovg/d3d11_shaders/D3D11PixelShader.h
-mulle-nanovg/d3d11_shaders/D3D11VertexShader.h
-mulle-nanovg/external/glad.h
 mulle-nanovg/fontstash.h
-mulle-nanovg/mnvg_bitcode/ios.h
-mulle-nanovg/mnvg_bitcode/macos.h
-mulle-nanovg/mnvg_bitcode/simulator.h
-mulle-nanovg/mnvg_bitcode/tvos.h
 mulle-nanovg/mulle-nanovg.h
-mulle-nanovg/mulle-rlgl.h
-mulle-nanovg/nanovg_d3d11.h
 mulle-nanovg/nanovg-framebuffer.h
-mulle-nanovg/nanovg_gl.h
-mulle-nanovg/nanovg_gl_utils.h
 mulle-nanovg/nanovg.h
-mulle-nanovg/nanovg_mtl.h
-mulle-nanovg/nanovg_rlgl.h
-mulle-nanovg/nanovg_rlgl_utils.h
 mulle-nanovg/nanovg-trace-functions.h
-mulle-nanovg/nanovg_vk.h
-mulle-nanovg/nanovg_vk_utils.h
 mulle-nanovg/reflect/_mulle-nanovg-include.h
 mulle-nanovg/reflect/_mulle-nanovg-provide.h
-mulle-nanovg/rlgl.h
 mulle-nanovg/stb_image.h
 mulle-nanovg/stb_image_resize2.h
 mulle-nanovg/stb_truetype.h
+)
+
+#
+# contents selected with patternfile ??-header--rlgl-headers
+#
+set( RLGL_HEADERS
+mulle-nanovg/mulle-rlgl.h
+mulle-nanovg/nanovg_rlgl.h
+mulle-nanovg/nanovg_rlgl_utils.h
+mulle-nanovg/rlgl.h
+)
+
+#
+# contents selected with patternfile ??-header--vulkan-headers
+#
+set( VULKAN_HEADERS
+mulle-nanovg/nanovg_vk.h
+mulle-nanovg/nanovg_vk_utils.h
 )
 

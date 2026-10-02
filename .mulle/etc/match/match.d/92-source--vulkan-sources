@@ -1,0 +1,2 @@
+# Vulkan sources (currently header-only, dormant until a *_vk.c appears).
+*_vk.c

@@ -1,0 +1,5 @@
+# rlgl backend public API header(s) (raylib GL abstraction).
+*_rlgl.h
+*_rlgl_*.h
+*-rlgl.h
+rlgl.h

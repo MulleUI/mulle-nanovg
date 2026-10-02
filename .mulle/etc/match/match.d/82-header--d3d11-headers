@@ -1,0 +1,3 @@
+# DirectX 11 backend public API header(s). Windows only (future install gating).
+*_d3d11.h
+*_dx11.h

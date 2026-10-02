@@ -1,0 +1,5 @@
+# Vendored third-party loaders (e.g. glad) used only as a private
+# implementation detail of the rlgl backend. Installed so rlgl.h can resolve
+# its relative #include "external/glad.h", but kept out of the public envelope
+# header (mulle-nanovg.h never references them).
+**/external/*.h

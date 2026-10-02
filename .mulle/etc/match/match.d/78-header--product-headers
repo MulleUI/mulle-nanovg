@@ -1,0 +1,4 @@
+# Generated shader byte-array products (e.g. compiled .hlsl -> D3D11*.h).
+# These are build products #included by backend sources, not public API headers,
+# so they must not be installed as public headers.
+**/*_shaders/*.h

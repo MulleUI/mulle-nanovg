@@ -5,7 +5,7 @@
 #
 # Disable generation of this file with:
 #
-# mulle-sde environment set MULLE_SOURCETREE_TO_CMAKE_LIBRARIES_FILE DISABLE
+# mulle-sde environment --global set MULLE_SOURCETREE_TO_CMAKE_LIBRARIES_FILE DISABLE
 #
 if( MULLE_TRACE_INCLUDE)
    message( STATUS "# Include \"${CMAKE_CURRENT_LIST_FILE}\"" )
@@ -51,7 +51,7 @@ endif()
 
 
 #
-# Generated from sourcetree: A36F37E1-5623-4A25-AE51-AFEE65278C5F;freetype;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;
+# Generated from sourcetree: A36F37E1-5623-4A25-AE51-AFEE65278C5F;freetype;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;Release:freetype,Debug:freetyped
 # Disable with : `mulle-sourcetree mark freetype `
 # Disable for this platform: `mulle-sourcetree mark freetype no-cmake-platform-${MULLE_UNAME}`
 # Disable for a sdk: `mulle-sourcetree mark freetype no-cmake-sdk-<name>`
@@ -60,16 +60,31 @@ if( COLLECT_OS_SPECIFIC_LIBRARIES_AS_NAMES)
    list( APPEND OS_SPECIFIC_LIBRARIES "freetype")
 else()
    if( NOT FREETYPE_LIBRARY)
-      foreach( _TMP_FREETYPE_LIBRARY_TARGET freetype)
-         if( TARGET ${_TMP_FREETYPE_LIBRARY_TARGET})
-            set( FREETYPE_LIBRARY ${_TMP_FREETYPE_LIBRARY_TARGET})
-            break()
+      if( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+         foreach( _TMP_FREETYPE_LIBRARY_TARGET freetype freetyped)
+            if( TARGET ${_TMP_FREETYPE_LIBRARY_TARGET})
+               set( FREETYPE_LIBRARY ${_TMP_FREETYPE_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT FREETYPE_LIBRARY)
+            find_library( FREETYPE_LIBRARY NAMES
+               freetyped
+            )
          endif()
-      endforeach()
+      endif()
       if( NOT FREETYPE_LIBRARY)
-         find_library( FREETYPE_LIBRARY NAMES
-            freetype
-         )
+         foreach( _TMP_FREETYPE_LIBRARY_TARGET freetype freetyped)
+            if( TARGET ${_TMP_FREETYPE_LIBRARY_TARGET})
+               set( FREETYPE_LIBRARY ${_TMP_FREETYPE_LIBRARY_TARGET})
+               break()
+            endif()
+         endforeach()
+         if( NOT FREETYPE_LIBRARY)
+            find_library( FREETYPE_LIBRARY NAMES
+               freetype
+            )
+         endif()
       endif()
       message( STATUS "FREETYPE_LIBRARY is ${FREETYPE_LIBRARY}")
    endif()
@@ -84,6 +99,6 @@ else()
          # intentionally left blank
    else()
       # Disable with: `mulle-sourcetree mark freetype no-require-link`
-      message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetype")
+      message( SEND_ERROR "FREETYPE_LIBRARY was not found in freetyped")
    endif()
 endif()

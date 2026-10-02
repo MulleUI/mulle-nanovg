@@ -15,4 +15,4 @@ mulle-freetype;${MULLE__FREETYPE_NODETYPE:-tar};no-actual-build,no-actual-link,n
 harfbuzz;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;6C4C99CE-7EBD-4F99-A5CA-A24CA46F323A;;${HARFBUZZ_BRANCH};;;
 png;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update;E1BF242C-47A1-4392-B3D9-C290D9EC7DFC;;;;;
 z;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update;87322E32-3B7F-4AB4-A5B8-610C1FB1839E;;;;;
-freetype;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;4E0EA0E7-8C54-499A-964A-920977CD56B3;;;;;
+freetype;none;no-all-load,no-build,no-cmake-inherit,no-delete,no-dependency,no-fs,no-header,no-import,no-share,no-update;4E0EA0E7-8C54-499A-964A-920977CD56B3;;;;;aliases=Release:freetype,Debug:freetyped
