@@ -1,7 +1,5 @@
 # mulle-nanovg
 
-Part of [MulleUI](https://github.com/MulleUI) — UIKit-shaped modular GUI libraries for mulle-objc.
-
 #### Part of [MulleUI](https://github.com/MulleUI) — UIKit-shaped modular GUI libraries for mulle-objc.
 
 - Plus additional API

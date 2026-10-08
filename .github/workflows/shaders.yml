@@ -27,7 +27,7 @@ jobs:
     name: Vulkan SPIR-V (.inc via glslang)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install glslang
         run: |
@@ -58,7 +58,7 @@ jobs:
           python3 /tmp/gen_spirv.py
 
       - name: Upload regenerated SPIR-V includes
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vulkan-spirv
           path: mulle-nanovg/shader/*.inc
@@ -92,7 +92,7 @@ jobs:
       run:
         shell: cmd
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Locate fxc
         id: fxc
@@ -112,7 +112,7 @@ jobs:
           "${{ steps.fxc.outputs.FXC }}" /nologo /T ps_4_0 /E main /Fh D3D11PixelShaderAA.h /Vn g_D3D11PixelShaderAA_Main D3D11PixelShaderAA.hlsl
 
       - name: Upload regenerated headers
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: d3d11-shaders
           path: |
@@ -142,7 +142,7 @@ jobs:
     name: Metal iOS/tvOS/simulator bitcode
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Compile Metal library for each target
         run: |
@@ -183,7 +183,7 @@ jobs:
           # gen appletvos       tvos.h      mnvg_bitcode_tvos      tvos-metal2.4
 
       - name: Upload regenerated bitcode
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: metal-bitcode
           path: mulle-nanovg/mnvg_bitcode/*.h
