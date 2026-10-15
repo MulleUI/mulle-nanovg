@@ -76,11 +76,11 @@ jobs:
           git commit -m "ci: regenerate Vulkan SPIR-V includes (glslang)"
           branch="${GITHUB_REF_NAME}"
           for i in 1 2 3 4 5; do
-            if git push origin "HEAD:${branch}"; then
+            if git push origin "HEAD:refs/heads/${branch}"; then
               echo "pushed"; exit 0
             fi
             echo "push rejected (attempt $i), rebasing on ${branch}..."
-            git pull --rebase origin "${branch}"
+            git pull --rebase origin "refs/heads/${branch}"
           done
           echo "failed to push after retries" >&2
           exit 1
@@ -131,10 +131,10 @@ jobs:
           git commit -m "ci: regenerate D3D11 pixel shader bytecode (fxc)"
           $branch = $env:GITHUB_REF_NAME
           for ($i = 1; $i -le 5; $i++) {
-            git push origin "HEAD:$branch"
+            git push origin "HEAD:refs/heads/$branch"
             if ($LASTEXITCODE -eq 0) { echo "pushed"; exit 0 }
             echo "push rejected (attempt $i), rebasing on $branch..."
-            git pull --rebase origin $branch
+            git pull --rebase origin "refs/heads/$branch"
           }
           echo "failed to push after retries"; exit 1
 
@@ -201,11 +201,11 @@ jobs:
           git commit -m "ci: regenerate Metal shader bitcode (all Apple SDKs)"
           branch="${GITHUB_REF_NAME}"
           for i in 1 2 3 4 5; do
-            if git push origin "HEAD:${branch}"; then
+            if git push origin "HEAD:refs/heads/${branch}"; then
               echo "pushed"; exit 0
             fi
             echo "push rejected (attempt $i), rebasing on ${branch}..."
-            git pull --rebase origin "${branch}"
+            git pull --rebase origin "refs/heads/${branch}"
           done
           echo "failed to push after retries" >&2
           exit 1
